@@ -1,0 +1,27 @@
+Retrieval Augmented Generation is an output-oriented AI method used for more reliable content generation.
+
+RAG can be expressed in terms of two pipelines - a data pipeline, and a user pipeline.
+
+Let's say that we're a doctor's surgery, looking to add a chat bot to our website UX.
+
+Data Pipeline
+In our data pipeline, we take a large number of documents containing key information about the surgery,
+including our premises, the services we provide, and a plethora of useful medical facts that our patients
+may find useful. These documents are in various forms - PDFs, CSVs, docx files.
+
+From our data input, we use an encoder linked to an LLM to chunk the text and content of our files (using libraries
+such as docling to segment them sensibily, ensuring as little context loss as possible) and then
+turn each one into a vector that we then store in a vector DB. Our RAG chatbot is ready for use.
+
+User Pipeline
+A user comes to our site. They want to understand if we have parking spaces outside our surgery. We
+could just take their question, pack it into a pre-prompt, and submit it to an LLM via an API call, but
+the LLM may not have the specific information needed. BUT, the specific information is in our documents,
+as fed into our vector DB!
+
+So, we take the user's question and use the same LLM we used previously to turn it into another vector.
+We then use cosine similarity to determine the similarity between our question vector and our other vectors;
+the most similar vector in our db represents the information source our user requires. We take its associated
+natural language content, package it into a pre-prompt with existing instructions, and send it to our LLM via
+API request. We then output the response received from the LLM as our "Answer".
+
