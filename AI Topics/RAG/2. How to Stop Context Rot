@@ -1,0 +1,32 @@
+Context rot, in the context of LLMs and associated applications, occurs when there is too much
+noise within a dataset for a language model to be able to generate contextually secure and correct
+outputs.
+
+Forms of Context Rot:
+- Context Window Inflation: As the number of tokens in a context window increases, the more AI agent
+performance degrades. As dead ends, distractions, and outdated information accretes, there is an increased
+likelihood that the agent will produce false or low-quality outputs.
+- Semantic Decay: Poor corpus chunking leads to input text losing its meaning.
+- Relationship Loss: In texts, relationships between entities are not always linearly expressed and
+can be implicit.
+- Outdated Information: Your retrieval is only as good as your source material. If outdated information
+is not updated in your AI product, or if outdated information persists alongside updated information in a vector
+DB, it can create noise for your AI.
+
+It can be mitigated against in the following ways:
+- Optimising for text cleanliness at the input level. Ensure content is expressed as unambiguously
+as possible, with the fewest distractors measured against anticipated use cases.
+- Regular data source updates with an equally conscientious policy of removing outdated data sources.
+For instance, a medical company developing a RAG agent will take steps to ensure that, as novel information
+about key medical subjects emerges (and corresponding documents obtained for your model), the new information
+is fed into your vector DB and the older, outdated information is removed.
+- Moderating the length of prompts. For instance, let's say we're building a coding assistant tool; a crude
+approach to handling context-related session length limits would be to bundle the entirety of a single
+chat instance into a new prompt and send it to the next instance so that it has the proper context to continue
+development. However, this is contextually expensive, immediately makes the context window full, and will include
+a great deal of noise. Instead, you could instruct your AI tool to create a pseudo-state-space, where it combs the
+chat instance for only the most relevant information according to pre-established criteria (or if you really wanted
+to be hyper-economical you could do this entirely without AI, using 'terrestrial' NLP search techniques like BM25
+and inverted search on the chat instance to isolate key terms, to go alongside a much simpler prompt), and discarding
+the rest, to ensure key context is retained, noise excised, and the next instance is given the most information possible
+with the least cost-in-context.
