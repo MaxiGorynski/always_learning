@@ -1,0 +1,18 @@
+RAG is a method of directing an LLM to contextually-relevant information in a much larger database
+before asking it to create an answer. It's the AI equivalent of a school librarian: instead of kids
+having to read every book in the library before they find the ones they need to study, the librarian
+is there to direct them to relevant, useful information.
+
+Prompt Engineering involves crafting specific instructions given to an AI model for a single task. It
+involves adding contextual cues, supporting documents, figures, formatting requirements, output
+requirements etc. to a single prompt. For instance, if you wanted your AI model to design a Stripe
+plugin for your site, good prompt engineering might include giving the AI important environment
+variables, Typescript code for the frontend page into which pricing is to be integrated, a short
+document on best practices of plugin design you're using site-wide, a CSS file for standardised
+formatting and design etc.
+
+Context Engineering involves designing and managing an information ecosystem that the AI needs to be
+useful when helping perform tasks. The eocystem will be composed not only of a history of prompts,
+but additional conversation history, user preferences, project state, past decisions, retrieved documents,
+and other relevant inputs so that an AI understands not just the task immediately in front of it, but
+how that task relates to a user's larger project.
