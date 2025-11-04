@@ -1,0 +1,84 @@
+Improving RAG Latency & Performance
+Infrastructure Optimisation:
+Vector DB selection & deployment:
+
+Choose performant vector DBs (Pinecone, Weaviate, Qdrant, pgvector)
+Geographic proximity to users (edge deployment for global apps)
+Add: Use approximate nearest neighbor (ANN) algorithms (HNSW, IVF) vs brute-force search - orders of magnitude faster
+Add: Index optimisation - tune parameters like ef_construction and M in HNSW for speed/accuracy tradeoff
+
+Data quality:
+
+Pre-process and clean documents before ingestion
+Remove boilerplate, redundant content, noise
+Smaller, cleaner corpus = faster retrieval + better results
+
+Retrieval Optimisation:
+Top-k tuning:
+
+Benchmark optimal chunk count for your use case (you mentioned 2 vs 5 - exactly right approach)
+Add: Dynamic k based on query complexity or confidence scores
+Fewer chunks = faster LLM inference
+
+Hybrid search strategies:
+
+Combine dense (vector) + sparse (BM25) retrieval for better precision with less chunks needed
+Add: Two-stage retrieval: fast initial retrieval (larger k) → reranker (smaller k) - reranking is faster than retrieving more
+
+Caching:
+
+Critical addition: Cache frequent queries and their retrieved chunks
+Semantic caching: cache similar queries (embed query, check similarity to cached queries)
+Reduces both vector search and LLM calls
+
+Chunking Efficiency (good point):
+Smart preprocessing:
+
+Use efficient parsers (spaCy, NLTK for text; Docling/Unstructured for complex layouts)
+Pre-compute embeddings offline during ingestion (not at query time)
+Clarification: This is about indexing speed, not runtime latency - but faster indexing enables more frequent updates
+
+Generation Optimisation:
+Response streaming:
+
+Streaming returns LLM output tokens as they're generated (word-by-word) rather than waiting for complete response
+User benefit: Perceived latency improvement, users see output immediately
+Technical benefit: Doesn't reduce actual processing time, but improves UX
+How it works: LLM generates tokens sequentially; stream each token to frontend via SSE/WebSocket as it's produced
+
+Model selection:
+
+Use smaller, faster models for retrieval/reranking (e.g., sentence transformers)
+Use appropriately-sized LLMs for generation (don't use GPT-4 if GPT-3.5 suffices)
+Add: Quantised models (4-bit, 8-bit) for faster inference with minimal quality loss
+
+Prompt optimisation:
+
+Concise system prompts reduce token count
+Only include necessary retrieved context
+Use token limits to truncate excessively long chunks
+
+Parallel Processing:
+Async operations:
+
+Retrieve from vector DB and load context in parallel where possible
+Batch embed multiple queries simultaneously
+Add: Prefetch likely follow-up queries during idle time
+
+Monitoring & Iteration:
+Metrics to track:
+
+Retrieval latency (vector search time)
+Generation latency (LLM inference time)
+End-to-end latency (user perspective)
+Cache hit rates
+Cost per query (optimise cost/latency tradeoff)
+
+A/B testing:
+
+Test different top-k values, chunk sizes, models
+Measure impact on both latency and answer quality
+
+Strong architectural insight to add: "The biggest wins often come from reducing unnecessary
+LLM calls through better retrieval precision and caching, rather than just making each
+individual call faster"
