@@ -1,0 +1,18 @@
+My experience of using LLMs via AWS:
+
+DT:
+- I used Amazon Bedrock, AWS' managed service for accessing goundation models, for LLM access,
+alongside OpenSearch for hybrid service, S3 for document corpuses, RDS for metadata and application
+state, and a REST API for search and summarisation endpoints.
+- I used Amazon Batch + SageMaker for quick embedding generation for millions of words of corpus
+material. Not sure the scale demanded it entirely in retrospect.
+- We used Lamba for event-driven processing, wherein an S3 upload would trigger summarisation
+via Bedrock
+- Also tried out Amazon Kendra, ML-powered enterprise search service, as I'd heard it was easier
+to deploy, but found that the output was not as high-quality as custom RAG
+
+Surf:
+- Amazon Bedrock once again for foundation models, though this was commonly used as a backup for
+SageMaker which we used to deploy custom models fine-tuned on proprietary data.
+- AWS Step Functions for ML training pipeline. Queried DB for matches, evaluated quality and relevance,
+labelling, storing of labelled training data for SageMaker retraining
