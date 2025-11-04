@@ -1,0 +1,22 @@
+At the crudest possible level, you can chunk text data for RAG using a few lines of simple
+Python that separate chunks of text in a larger corpus based on a pre-defined character or
+word limit. For instance, we could initialise an empty array, iterate through a document,
+and then add a new chunk to the array as a new item every time we hit the 200th character,
+or the 200th word.
+
+However, this is highly unsophisticated. In natural language texts, we have a number of methods
+for organising meaning - paragraphing, subheadings etc. An improved method of chunking would:
+* Anchor chunk length to paragraphs (adding a certain amount of padding to each if we need to
+ensure that chunks are the same length)
+* Use markdown/HTML to preserve headers, code blocks and lists
+* Use layout analysis (eg Dicling) to respect tables, figures, columnar layouts in PDFs
+* For code files, we can chunk by function or class boundaries, not line counts.
+* For instances wherein a paragraph may be longer than a maximum chunk length (according to
+character), then a provision whereby upon hitting a limit mid-sentence we cycle back to the
+end of the last complete sentence, and then affix a signifier in our db to the truncated paragraph
+(as well as the subsequent chunk) to denote that they are two parts of a single paragraph
+separated into different chunks.
+
+There are a number of Python libraries such as docling that allow you to do some of these things and more where chunking is concerned.
+
+And speaking of what we can do with our DB in order to make chunking more reliable, contextually rich, and retrievable, we may also wish to modify our chunking approach to include a variety of metadata (for instance, which subheading the current chunk belongs to, the most recurrent keywords, as established through simple BM25 or inverted search sweeps post-chunking) that will allow our platform to not only understand the nature of individual chunks better, but also correctly interpret potentially high mutual relevance of chunks that may have lower vector similarity.
