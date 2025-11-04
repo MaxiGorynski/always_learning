@@ -1,0 +1,43 @@
+For RAG Indexing:
+
+Do use parallel execution when:
+- Processing documents, to parse multiple documents simultaneously, as each document is distinct.
+Use multiprocessing pools and async workers, or distributed systems.
+- Chunking, to chunk multiple documents in parallel, or chunk individual documents in parallel
+by distributing work page-by-page. A good parent-child subject key or keyword basket can still
+preserve non-linear affinities between chunks by doing things this way.
+- Embedding generation; once chunks are cut, you can vectorise them simultaneously. Most embedding
+APIs support batch requests.
+
+Do not use parallel indexing when:
+- Dealing with sequential dependencies. For instance, if you're dealing with text that commonly
+has paragraphs spilling over pages, and you're chunking according to paragraph length, you will
+need to either avoid doing things in parallel, or ensure that you have good edge-case handling.
+
+For RAG Runtime:
+
+Do use parallel execution when:
+- Query preprocessing. If our RAG service uses query expansion, we can create and vectorise each
+concurrently.
+- Multi-index retrieval. Let's say we have a sharded vector DB, or multiple DBs to query. We can query
+all of them in parallel for faster returns.
+- When running hybrid search.
+- Using ensemble retrieval; that is, using multiple embedding models for robustness. We can embed
+a query with all models in parallel.
+
+Do not use parallel execution when:
+- Using iterative retrieval (whereby we search, analyse, refine our query, and search again). This
+must be sequential.
+
+For Post-Retrieval:
+
+Do use parallel execution when:
+- Reranking multiple candidates. If we've retrieved top 20 chunks and need to re-rank to a top 5,
+we can score each in parallel using a batch inference on reranker.
+- Multi-step reasoning with independent branches. Say we're dealing with a speculative, contingent,
+or otherwise complex query, we could query multiple models with the same prompt and aggregate
+responses.
+
+Do not use parallel execution when:
+- Generating output response. Token gen in LLms is inherently sequential.
+- Doing chain-of-thought reasoning, which is inherently sequential.
