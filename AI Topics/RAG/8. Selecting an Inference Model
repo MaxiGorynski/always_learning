@@ -1,0 +1,33 @@
+Performance vs. Hardware Quality - You want something your gear can handle, with
+appropriate ggml and quantisation levels. Unlikely to be an issue for an operator
+like HSBC, mind you. Does it perform well on batch processing/parallelised task execution?
+If I'm building a chatbot, is it fast enough to make event streaming look smooth and seamless?
+
+Context Handling - Context Lenght
+- For short tasks, 4k-8k is fine
+- For RAG, 8k-32k is preferable
+- For long document analysis, 32k-200k is preferable. However, these are more expensive
+
+Context Handling - Context Quality
+- How quickly does performance degrade past a given context checkpoint?
+- Is it suitable for our team's context engineering needs?
+
+API Quality and Development Experience:
+- Doc quality
+- SDK quality and availability
+- Error handling and retry logic
+- Transparency over things like rate limiting (tokens per minute, requests per minute)
+
+Task-Specific Performance:
+- Performance against our eval set, to establish our private benchmarks
+- Domain specialisation: Claude will do better than Mistral for coding; Claude Opus may do better
+than Claude Sonnet for maths; neither will do as well in esoteric fields (law) as a fine-tuned
+custom model
+
+Deployment and Infra:
+- API integration means no infra management but it means data leaves the pen, ongoing costs, vendor lock-in
+- Self-hosting means we keep tabs on data but have to pay for infra overhead
+
+Regulatory Factors:
+- Data residency: Does the data stay in-region/country
+- Compliance certifications for heavily regulated sectors like healthcare and pharma
