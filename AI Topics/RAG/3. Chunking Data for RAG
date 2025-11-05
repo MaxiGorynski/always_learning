@@ -9,7 +9,7 @@ for organising meaning - paragraphing, subheadings etc. An improved method of ch
 * Anchor chunk length to paragraphs (adding a certain amount of padding to each if we need to
 ensure that chunks are the same length)
 * Use markdown/HTML to preserve headers, code blocks and lists
-* Use layout analysis (eg Dicling) to respect tables, figures, columnar layouts in PDFs
+* Use layout analysis (eg Docling) to respect tables, figures, columnar layouts in PDFs
 * For code files, we can chunk by function or class boundaries, not line counts.
 * For instances wherein a paragraph may be longer than a maximum chunk length (according to
 character), then a provision whereby upon hitting a limit mid-sentence we cycle back to the
@@ -19,4 +19,9 @@ separated into different chunks.
 
 There are a number of Python libraries such as docling that allow you to do some of these things and more where chunking is concerned.
 
-And speaking of what we can do with our DB in order to make chunking more reliable, contextually rich, and retrievable, we may also wish to modify our chunking approach to include a variety of metadata (for instance, which subheading the current chunk belongs to, the most recurrent keywords, as established through simple BM25 or inverted search sweeps post-chunking) that will allow our platform to not only understand the nature of individual chunks better, but also correctly interpret potentially high mutual relevance of chunks that may have lower vector similarity.
+And speaking of what we can do with our DB in order to make chunking more reliable, contextually
+rich, and retrievable, we may also wish to modify our chunking approach to include a variety of
+metadata (for instance, which subheading the current chunk belongs to, the most recurrent keywords,
+as established through simple BM25 or inverted search sweeps post-chunking) that will allow our
+platform to not only understand the nature of individual chunks better, but also correctly
+interpret potentially high mutual relevance of chunks that may have lower vector similarity.
