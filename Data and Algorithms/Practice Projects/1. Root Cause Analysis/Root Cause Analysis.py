@@ -148,3 +148,44 @@ for i, rate in enumerate(pass_rates):
 
 plt.tight_layout()
 plt.savefig('monthly_pass_rate_decline.png', dpi=300, bbox_inches='tight')
+
+#10 Categorising Failure Types
+
+# Isolate failed attempts
+failed_attempts = merged_df[~merged_df['attempt_passed']].copy()
+
+print(f"Analysing {len(failed_attempts)} failed attempts...")
+
+
+# Categorise failure types
+def categorise_failure(row):
+    """
+    Categorise each failed attempt by which check(s) failed.
+
+    Returns:
+        - 'doc_only': Document check failed, face check passed
+        - 'face_only': Face check failed, document check passed
+        - 'both_failed': Both checks failed
+        - 'missing_data': One or both checks missing (data quality issue)
+    """
+    face_failed = row['result_face'] != 'clear'
+    doc_failed = row['result_doc'] != 'clear'
+
+    if pd.isna(row['result_face']) or pd.isna(row['result_doc']):
+        return 'missing_data'
+    elif face_failed and doc_failed:
+        return 'both_failed'
+    elif face_failed:
+        return 'face_only'
+    elif doc_failed:
+        return 'doc_only'
+    else:
+        return 'unknown'
+
+
+failed_attempts['failure_type'] = failed_attempts.apply(categorise_failure, axis=1)
+
+print("\nFailure type distribution:")
+print(failed_attempts['failure_type'].value_counts())
+print("\nAs percentages:")
+print(failed_attempts['failure_type'].value_counts(normalize=True) * 100)
