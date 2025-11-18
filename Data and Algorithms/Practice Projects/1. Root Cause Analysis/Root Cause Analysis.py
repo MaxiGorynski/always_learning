@@ -111,3 +111,40 @@ monthly_stats = merged_df.groupby('month').agg({
 monthly_stats.columns = ['total_attempts', 'passed_attempts', 'pass_rate']
 
 print(monthly_stats)
+
+#9 Visualising the Decline
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Set style
+plt.style.use('seaborn-v0_8-darkgrid')
+sns.set_palette("husl")
+
+# Create figure
+fig, ax = plt.subplots(figsize=(10, 6))
+
+months = [str(m) for m in monthly_stats.index]
+pass_rates = monthly_stats['pass_rate'].values * 100
+
+ax.plot(months, pass_rates, marker='o', linewidth=3, markersize=10, color='#e74c3c')
+ax.axhline(y=85, color='green', linestyle='--', label='Target (85%)', alpha=0.7, linewidth=2)
+
+ax.set_title('Monthly KYC Pass Rate Decline', fontsize=16, fontweight='bold', pad=20)
+ax.set_xlabel('Month (2017)', fontsize=12)
+ax.set_ylabel('Pass Rate (%)', fontsize=12)
+ax.legend(fontsize=11)
+ax.grid(True, alpha=0.3)
+ax.set_ylim(50, 100)
+
+# Annotate values
+for i, rate in enumerate(pass_rates):
+    ax.annotate(f'{rate:.1f}%',
+                xy=(i, rate),
+                xytext=(0, 10),
+                textcoords='offset points',
+                ha='center',
+                fontsize=10,
+                fontweight='bold')
+
+plt.tight_layout()
+plt.savefig('monthly_pass_rate_decline.png', dpi=300, bbox_inches='tight')
