@@ -423,3 +423,44 @@ for month in months:
 face_results_df = pd.DataFrame(face_results)
 print("Face check clear rates over time:")
 print(face_results_df.to_string(index=False))
+
+#18 Comparative Visualisation, Documents vs Face Checks
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+
+# Left plot: Document image_integrity (declining)
+ax1.plot(results_df['month'], results_df['image_integrity'],
+         marker='o', linewidth=3, markersize=10, color='#e74c3c')
+ax1.set_title('Document image_integrity\n(DECLINING)',
+              fontsize=14, fontweight='bold', color='#e74c3c')
+ax1.set_xlabel('Month (2017)', fontsize=11)
+ax1.set_ylabel('Clear Rate (%)', fontsize=11)
+ax1.grid(True, alpha=0.3)
+ax1.set_ylim(60, 100)
+plt.setp(ax1.xaxis.get_majorticklabels(), rotation=45, ha='right')
+
+# Annotate start and end
+ax1.text(0, 99.64, '99.64%', fontsize=10, fontweight='bold', ha='right')
+ax1.text(5, 61.70, '61.70%', fontsize=10, fontweight='bold', ha='left')
+
+# Right plot: Face facial_image_integrity (improving)
+ax2.plot(face_results_df['month'], face_results_df['facial_image_integrity'],
+         marker='o', linewidth=3, markersize=10, color='#2ecc71')
+ax2.set_title('Face facial_image_integrity\n(IMPROVING)',
+              fontsize=14, fontweight='bold', color='#2ecc71')
+ax2.set_xlabel('Month (2017)', fontsize=11)
+ax2.set_ylabel('Clear Rate (%)', fontsize=11)
+ax2.grid(True, alpha=0.3)
+ax2.set_ylim(60, 100)
+plt.setp(ax2.xaxis.get_majorticklabels(), rotation=45, ha='right')
+
+# Annotate start and end
+ax2.text(0, 95.65, '95.65%', fontsize=10, fontweight='bold', ha='right')
+ax2.text(5, 97.29, '97.29%', fontsize=10, fontweight='bold', ha='left')
+
+fig.suptitle('Control Group Analysis: Document Checks Degraded, Face Checks Improved',
+             fontsize=16, fontweight='bold', y=1.02)
+
+plt.tight_layout()
+plt.savefig('/mnt/user-data/outputs/control_group_comparison.png', dpi=300, bbox_inches='tight')
+print("Chart saved to /mnt/user-data/outputs/control_group_comparison.png")
