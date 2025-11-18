@@ -218,3 +218,47 @@ comparison_df = pd.DataFrame({
     'Change': late_pct - early_pct
 }).round(1)
 print(comparison_df)
+
+#12 Visualsing Failure Type Evolution
+
+import numpy as np
+
+fig, ax = plt.subplots(figsize=(10, 6))
+
+failure_types = ['Document Only', 'Face Only', 'Both Failed']
+early_values = [29.4, 67.6, 2.9]
+late_values = [91.7, 2.3, 6.0]
+
+x = np.arange(len(failure_types))
+width = 0.35
+
+bars1 = ax.bar(x - width / 2, early_values, width, label='June (Baseline)', color='#3498db')
+bars2 = ax.bar(x + width / 2, late_values, width, label='October (Problem)', color='#e74c3c')
+
+ax.set_title('Failure Type Distribution: June vs October', fontsize=16, fontweight='bold', pad=20)
+ax.set_ylabel('Percentage of Failures (%)', fontsize=12)
+ax.set_xticks(x)
+ax.set_xticklabels(failure_types, fontsize=11)
+ax.legend(fontsize=11)
+ax.grid(True, alpha=0.3, axis='y')
+ax.set_ylim(0, 100)
+
+# Add value labels
+for i, (e, l) in enumerate(zip(early_values, late_values)):
+    ax.text(i - width / 2, e + 2, f'{e:.1f}%', ha='center', fontsize=10, fontweight='bold')
+    ax.text(i + width / 2, l + 2, f'{l:.1f}%', ha='center', fontsize=10, fontweight='bold')
+
+    # Add change arrow and percentage
+    change = l - e
+    color = '#e74c3c' if change > 0 else '#2ecc71'
+    y_pos = max(e, l) + 10
+    ax.annotate(f'{change:+.1f}%',
+                xy=(i, y_pos),
+                ha='center',
+                fontsize=11,
+                fontweight='bold',
+                color=color)
+
+plt.tight_layout()
+plt.savefig('/mnt/user-data/outputs/failure_type_comparison.png', dpi=300, bbox_inches='tight')
+print("Chart saved to /mnt/user-data/outputs/failure_type_comparison.png")
