@@ -66,3 +66,19 @@ print(doc_df['result'].value_counts())
 
 print("\nDocument sub_result breakdown:")
 print(doc_df['sub_result'].value_counts())
+
+#6 Defining Pass Logic
+# Define pass/fail at attempt level
+merged_df['attempt_passed'] = (
+    (merged_df['result_face'] == 'clear') &
+    (merged_df['result_doc'] == 'clear')
+)
+
+# Calculate attempt-level pass rate
+attempt_pass_rate = merged_df['attempt_passed'].mean()
+print(f"Attempt-level pass rate: {attempt_pass_rate:.2%}")
+print(f"Total attempts: {len(merged_df)}")
+print(f"Passed attempts: {merged_df['attempt_passed'].sum()}")
+print(f"Failed attempts: {(~merged_df['attempt_passed']).sum()}")
+
+
