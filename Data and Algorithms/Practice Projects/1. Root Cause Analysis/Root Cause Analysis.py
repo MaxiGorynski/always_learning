@@ -31,3 +31,12 @@ print(f"\nTemporal coverage:")
 print(f"Start: {face_df['created_at'].min()}")
 print(f"End: {face_df['created_at'].max()}")
 print(f"Duration: {(face_df['created_at'].max() - face_df['created_at'].min()).days} days")
+
+#3 Data Quality Assessment
+
+# Missing values
+print("Missing values in face checks:")
+print(face_df.isnull().sum()[face_df.isnull().sum() > 0])
+
+print("\nMissing values in document checks:")
+print(doc_df.isnull().sum()[doc_df.isnull().sum() > 0])
