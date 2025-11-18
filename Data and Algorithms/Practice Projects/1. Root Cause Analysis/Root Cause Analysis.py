@@ -189,3 +189,32 @@ print("\nFailure type distribution:")
 print(failed_attempts['failure_type'].value_counts())
 print("\nAs percentages:")
 print(failed_attempts['failure_type'].value_counts(normalize=True) * 100)
+
+#11 Temporal Evolution of Failure Types
+
+# Compare early period (June) vs late period (October)
+early_date = pd.to_datetime('2017-06-30')
+late_date = pd.to_datetime('2017-10-01')
+
+early_failures = failed_attempts[pd.to_datetime(failed_attempts['created_at_face']) < early_date]
+late_failures = failed_attempts[pd.to_datetime(failed_attempts['created_at_face']) >= late_date]
+
+print("Early period (before June 30) failure breakdown:")
+print(early_failures['failure_type'].value_counts())
+print(f"\nTotal early failures: {len(early_failures)}")
+
+print("\nLate period (October onwards) failure breakdown:")
+print(late_failures['failure_type'].value_counts())
+print(f"\nTotal late failures: {len(late_failures)}")
+
+# Calculate percentage shift
+early_pct = early_failures['failure_type'].value_counts(normalize=True) * 100
+late_pct = late_failures['failure_type'].value_counts(normalize=True) * 100
+
+print("\nPercentage comparison:")
+comparison_df = pd.DataFrame({
+    'Early': early_pct,
+    'Late': late_pct,
+    'Change': late_pct - early_pct
+}).round(1)
+print(comparison_df)
