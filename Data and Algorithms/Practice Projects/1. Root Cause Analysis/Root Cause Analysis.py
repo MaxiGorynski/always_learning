@@ -369,3 +369,29 @@ ax.annotate('Catastrophic\nDegradation',
 plt.tight_layout()
 plt.savefig('/mnt/user-data/outputs/subcheck_degradation.png', dpi=300, bbox_inches='tight')
 print("Chart saved to /mnt/user-data/outputs/subcheck_degradation.png")
+
+#16 Month-to-Month Decline Rates
+
+changes = []
+
+for i in range(1, len(results_df)):
+    prev_month = results_df.iloc[i - 1]
+    curr_month = results_df.iloc[i]
+
+    changes.append({
+        'period': f"{prev_month['month']} → {curr_month['month']}",
+        'image_integrity_change': curr_month['image_integrity'] - prev_month['image_integrity'],
+        'image_quality_change': curr_month['image_quality'] - prev_month['image_quality']
+    })
+
+changes_df = pd.DataFrame(changes)
+print("\nMonth-to-month changes (percentage points):")
+print(changes_df.to_string(index=False))
+
+# Calculate average monthly decline
+avg_decline_integrity = changes_df['image_integrity_change'].mean()
+avg_decline_quality = changes_df['image_quality_change'].mean()
+
+print(f"\nAverage monthly decline:")
+print(f"  image_integrity: {avg_decline_integrity:.2f} percentage points")
+print(f"  image_quality: {avg_decline_quality:.2f} percentage points")
