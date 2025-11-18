@@ -97,3 +97,17 @@ print(f"User-level pass rate: {user_attempts['user_passed'].mean():.2%}")
 
 print("\nAttempts per user:")
 print(user_attempts['num_attempts'].value_counts().sort_index())
+
+#8 Monthly Pass Rate Trends
+# Extract month for grouping
+merged_df['date'] = pd.to_datetime(merged_df['created_at_face']).dt.date
+merged_df['month'] = pd.to_datetime(merged_df['date']).dt.to_period('M')
+
+# Calculate monthly statistics
+monthly_stats = merged_df.groupby('month').agg({
+    'attempt_id': 'count',
+    'attempt_passed': ['sum', 'mean']
+}).round(4)
+monthly_stats.columns = ['total_attempts', 'passed_attempts', 'pass_rate']
+
+print(monthly_stats)
