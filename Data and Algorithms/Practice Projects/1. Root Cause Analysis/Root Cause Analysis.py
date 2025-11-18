@@ -40,3 +40,21 @@ print(face_df.isnull().sum()[face_df.isnull().sum() > 0])
 
 print("\nMissing values in document checks:")
 print(doc_df.isnull().sum()[doc_df.isnull().sum() > 0])
+
+#4 Merging the Dataset
+
+# Merge on attempt_id to link face and document checks
+merged_df = pd.merge(
+    face_df,
+    doc_df,
+    on='attempt_id',
+    suffixes=('_face', '_doc'),
+    how='outer'
+)
+
+print(f"Merged dataset shape: {merged_df.shape}")
+print(f"Rows with both checks: {merged_df['result_face'].notna() & merged_df['result_doc'].notna()).sum()}")
+print(f"Rows with only face check: {(merged_df['result_face'].notna() & merged_df['result_doc'].isna()).sum()}")
+print(f"Rows with only doc check: {(merged_df['result_face'].isna() & merged_df['result_doc'].notna()).sum()}")
+
+#5
