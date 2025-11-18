@@ -331,3 +331,41 @@ for month in months:
 
 results_df = pd.DataFrame(results)
 print(results_df.to_string(index=False))
+
+#15 Visualising Sub-Check Degradation
+
+fig, ax = plt.subplots(figsize=(12, 7))
+
+# Plot each sub-check
+ax.plot(results_df['month'], results_df['image_integrity'],
+        marker='o', linewidth=3, markersize=10, label='image_integrity', color='#e74c3c')
+ax.plot(results_df['month'], results_df['image_quality'],
+        marker='s', linewidth=3, markersize=10, label='image_quality', color='#f39c12')
+ax.plot(results_df['month'], results_df['visual_authenticity'],
+        marker='^', linewidth=2, markersize=8, label='visual_authenticity', color='#2ecc71')
+ax.plot(results_df['month'], results_df['face_detection'],
+        marker='d', linewidth=2, markersize=8, label='face_detection', color='#3498db')
+
+ax.set_title('Document Sub-Check Clear Rates Over Time', fontsize=16, fontweight='bold', pad=20)
+ax.set_xlabel('Month (2017)', fontsize=12)
+ax.set_ylabel('Clear Rate (%)', fontsize=12)
+ax.legend(fontsize=11, loc='lower left')
+ax.grid(True, alpha=0.3)
+ax.set_ylim(55, 105)
+
+# Rotate x labels
+plt.xticks(rotation=45, ha='right')
+
+# Annotate the catastrophic drop
+ax.annotate('Catastrophic\nDegradation',
+            xy=(5, 61.7),
+            xytext=(4, 70),
+            arrowprops=dict(arrowstyle='->', color='red', lw=2),
+            fontsize=11,
+            fontweight='bold',
+            color='red',
+            bbox=dict(boxstyle='round', facecolor='white', edgecolor='red'))
+
+plt.tight_layout()
+plt.savefig('/mnt/user-data/outputs/subcheck_degradation.png', dpi=300, bbox_inches='tight')
+print("Chart saved to /mnt/user-data/outputs/subcheck_degradation.png")
