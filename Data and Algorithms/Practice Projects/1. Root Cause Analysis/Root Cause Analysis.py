@@ -464,3 +464,26 @@ fig.suptitle('Control Group Analysis: Document Checks Degraded, Face Checks Impr
 plt.tight_layout()
 plt.savefig('/mnt/user-data/outputs/control_group_comparison.png', dpi=300, bbox_inches='tight')
 print("Chart saved to /mnt/user-data/outputs/control_group_comparison.png")
+
+#19 Solution, Real Time Monitoring, to be deployed as an hourly cron job
+
+class KYCSubCheckMonitor:
+    """
+    Alert if any sub-check clear rate drops >10% from
+    7-day rolling baseline.
+    """
+
+    def check_hourly(self):
+        for subcheck in all_subchecks:
+            current_rate = get_last_hour_clear_rate(subcheck)
+            baseline = get_7day_baseline(subcheck)
+
+            if current_rate < (baseline - 0.10):
+                send_pagerduty_alert(
+                    severity='HIGH',
+                    subcheck=subcheck,
+                    current=current_rate,
+                    baseline=baseline
+                )
+
+
