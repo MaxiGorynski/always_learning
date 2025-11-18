@@ -81,4 +81,19 @@ print(f"Total attempts: {len(merged_df)}")
 print(f"Passed attempts: {merged_df['attempt_passed'].sum()}")
 print(f"Failed attempts: {(~merged_df['attempt_passed']).sum()}")
 
+#7 User-Level Pass Rate
+# Use whichever user_id is not null
+merged_df['user_id'] = merged_df['user_id_face'].fillna(merged_df['user_id_doc'])
 
+# Group by user
+user_attempts = merged_df.groupby('user_id').agg({
+    'attempt_id': 'count',
+    'attempt_passed': 'any'  # User passes if ANY attempt passes
+}).rename(columns={'attempt_id': 'num_attempts', 'attempt_passed': 'user_passed'})
+
+print(f"Total unique users: {len(user_attempts)}")
+print(f"Users who passed: {user_attempts['user_passed'].sum()}")
+print(f"User-level pass rate: {user_attempts['user_passed'].mean():.2%}")
+
+print("\nAttempts per user:")
+print(user_attempts['num_attempts'].value_counts().sort_index())
