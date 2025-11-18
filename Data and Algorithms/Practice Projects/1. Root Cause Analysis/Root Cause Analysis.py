@@ -262,3 +262,31 @@ for i, (e, l) in enumerate(zip(early_values, late_values)):
 plt.tight_layout()
 plt.savefig('/mnt/user-data/outputs/failure_type_comparison.png', dpi=300, bbox_inches='tight')
 print("Chart saved to /mnt/user-data/outputs/failure_type_comparison.png")
+
+#13 Document Sub-Check Breakdown
+
+# List all document sub-check columns
+doc_subchecks = [
+    'visual_authenticity_result_doc',
+    'image_integrity_result',
+    'face_detection_result',
+    'image_quality_result',
+    'supported_document_result',
+    'conclusive_document_quality_result'
+]
+
+# Analyse failures for document-only failures
+doc_only_failures = failed_attempts[failed_attempts['failure_type'] == 'doc_only']
+
+print(f"Analysing {len(doc_only_failures)} document-only failures\n")
+
+# Count non-clear results for each sub-check
+for subcheck in doc_subchecks:
+    if subcheck in doc_only_failures.columns:
+        non_clear = doc_only_failures[doc_only_failures[subcheck] != 'clear']
+        if len(non_clear) > 0:
+            print(f"{subcheck}:")
+            print(f"  Total non-clear: {len(non_clear)}")
+            print(f"  Value distribution:")
+            print(f"  {non_clear[subcheck].value_counts().to_dict()}")
+            print()
