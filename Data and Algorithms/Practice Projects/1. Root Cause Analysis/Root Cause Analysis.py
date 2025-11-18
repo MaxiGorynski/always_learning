@@ -395,3 +395,31 @@ avg_decline_quality = changes_df['image_quality_change'].mean()
 print(f"\nAverage monthly decline:")
 print(f"  image_integrity: {avg_decline_integrity:.2f} percentage points")
 print(f"  image_quality: {avg_decline_quality:.2f} percentage points")
+
+#17 Control Group Analysis, Face Check Sub-Results Over Time
+
+# Calculate monthly clear rates for face sub-checks
+face_results = []
+
+for month in months:
+    month_data = merged_df[merged_df['month'] == month]
+
+    # facial_image_integrity_result
+    facial_int_total = month_data['facial_image_integrity_result'].notna().sum()
+    facial_int_clear = (month_data['facial_image_integrity_result'] == 'clear').sum()
+    facial_int_rate = (facial_int_clear / facial_int_total) if facial_int_total > 0 else 0
+
+    # face_comparison_result
+    face_comp_total = month_data['face_comparison_result'].notna().sum()
+    face_comp_clear = (month_data['face_comparison_result'] == 'clear').sum()
+    face_comp_rate = (face_comp_clear / face_comp_total) if face_comp_total > 0 else 0
+
+    face_results.append({
+        'month': month,
+        'facial_image_integrity': facial_int_rate * 100,
+        'face_comparison': face_comp_rate * 100
+    })
+
+face_results_df = pd.DataFrame(face_results)
+print("Face check clear rates over time:")
+print(face_results_df.to_string(index=False))
