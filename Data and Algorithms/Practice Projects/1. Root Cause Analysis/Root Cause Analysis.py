@@ -290,3 +290,44 @@ for subcheck in doc_subchecks:
             print(f"  Value distribution:")
             print(f"  {non_clear[subcheck].value_counts().to_dict()}")
             print()
+
+#14 Monthly Sub-Check Degradation
+
+# Calculate monthly clear rates for key sub-checks
+months = ['2017-05', '2017-06', '2017-07', '2017-08', '2017-09', '2017-10']
+
+results = []
+
+for month in months:
+    month_data = merged_df[merged_df['month'] == month]
+
+    # image_integrity_result
+    img_int_total = month_data['image_integrity_result'].notna().sum()
+    img_int_clear = (month_data['image_integrity_result'] == 'clear').sum()
+    img_int_rate = (img_int_clear / img_int_total) if img_int_total > 0 else 0
+
+    # image_quality_result
+    img_qual_total = month_data['image_quality_result'].notna().sum()
+    img_qual_clear = (month_data['image_quality_result'] == 'clear').sum()
+    img_qual_rate = (img_qual_clear / img_qual_total) if img_qual_total > 0 else 0
+
+    # visual_authenticity_result
+    vis_auth_total = month_data['visual_authenticity_result_doc'].notna().sum()
+    vis_auth_clear = (month_data['visual_authenticity_result_doc'] == 'clear').sum()
+    vis_auth_rate = (vis_auth_clear / vis_auth_total) if vis_auth_total > 0 else 0
+
+    # face_detection_result
+    face_det_total = month_data['face_detection_result'].notna().sum()
+    face_det_clear = (month_data['face_detection_result'] == 'clear').sum()
+    face_det_rate = (face_det_clear / face_det_total) if face_det_total > 0 else 0
+
+    results.append({
+        'month': month,
+        'image_integrity': img_int_rate * 100,
+        'image_quality': img_qual_rate * 100,
+        'visual_authenticity': vis_auth_rate * 100,
+        'face_detection': face_det_rate * 100
+    })
+
+results_df = pd.DataFrame(results)
+print(results_df.to_string(index=False))
