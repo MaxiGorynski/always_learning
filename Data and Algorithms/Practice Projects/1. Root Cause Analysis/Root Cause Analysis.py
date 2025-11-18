@@ -53,8 +53,16 @@ merged_df = pd.merge(
 )
 
 print(f"Merged dataset shape: {merged_df.shape}")
-print(f"Rows with both checks: {merged_df['result_face'].notna() & merged_df['result_doc'].notna()).sum()}")
+print(f"Rows with both checks: {(merged_df['result_face'].notna() & merged_df['result_doc'].notna()).sum()}")
 print(f"Rows with only face check: {(merged_df['result_face'].notna() & merged_df['result_doc'].isna()).sum()}")
 print(f"Rows with only doc check: {(merged_df['result_face'].isna() & merged_df['result_doc'].notna()).sum()}")
 
-#5
+#5 Understanding Result Values
+print("Face check results:")
+print(face_df['result'].value_counts())
+
+print("\nDocument check results:")
+print(doc_df['result'].value_counts())
+
+print("\nDocument sub_result breakdown:")
+print(doc_df['sub_result'].value_counts())
