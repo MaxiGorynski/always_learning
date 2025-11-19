@@ -26,6 +26,8 @@
             background: #1e1e1e;
             padding: 1rem 0;
             color: white;
+            display: flex;
+            flex-direction: column;
         }
 
         .sidebar-header {
@@ -36,7 +38,7 @@
         .sidebar-icon {
             width: 32px;
             height: 32px;
-            borderRadius: 6px;
+            border-radius: 6px;
             background: linear-gradient(135deg, #1fa9f4, #6ee7fc);
             display: inline-flex;
             align-items: center;
@@ -51,7 +53,7 @@
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            fontSize: 0.9rem;
+            font-size: 0.9rem;
             color: #888;
         }
 
@@ -59,6 +61,20 @@
             background: #2d2d2d;
             color: white;
             border-left: 3px solid #1fa9f4;
+        }
+
+        .sidebar-logo {
+            margin-top: auto;
+            padding: 1rem;
+            border-top: 1px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-logo img {
+            max-width: 140px;
+            height: auto;
         }
 
         .main-content {
@@ -254,6 +270,9 @@
             <div class="nav-item active"><span>📋</span><span>Stats</span></div>
             <div class="nav-item"><span>⚙️</span><span>Settings</span></div>
         </nav>
+        <div class="sidebar-logo">
+            <img src="data:image/png;base64,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" alt="LightWork AI">
+        </div>
     </div>
 
     <!-- Main Content -->
@@ -293,15 +312,16 @@
             <div class="chart-container">
                 <svg viewBox="0 0 1000 400" xmlns="http://www.w3.org/2000/svg">
                     <!-- Grid lines -->
-                    <line x1="80" y1="50" x2="80" y2="320" stroke="#e0e0e0" stroke-width="1"/>
+                    <line x1="80" y1="20" x2="80" y2="320" stroke="#e0e0e0" stroke-width="1"/>
                     <line x1="80" y1="320" x2="950" y2="320" stroke="#e0e0e0" stroke-width="1"/>
 
-                    <!-- Y-axis labels -->
-                    <text x="60" y="55" font-size="12" fill="#666" text-anchor="end">100</text>
-                    <text x="60" y="122" font-size="12" fill="#666" text-anchor="end">90</text>
-                    <text x="60" y="189" font-size="12" fill="#666" text-anchor="end">80</text>
-                    <text x="60" y="256" font-size="12" fill="#666" text-anchor="end">70</text>
-                    <text x="60" y="323" font-size="12" fill="#666" text-anchor="end">60</text>
+                    <!-- Y-axis labels - adjusted scale from 50-100 -->
+                    <text x="60" y="25" font-size="12" fill="#666" text-anchor="end">100</text>
+                    <text x="60" y="86" font-size="12" fill="#666" text-anchor="end">90</text>
+                    <text x="60" y="147" font-size="12" fill="#666" text-anchor="end">80</text>
+                    <text x="60" y="208" font-size="12" fill="#666" text-anchor="end">70</text>
+                    <text x="60" y="269" font-size="12" fill="#666" text-anchor="end">60</text>
+                    <text x="60" y="325" font-size="12" fill="#666" text-anchor="end">50</text>
 
                     <!-- X-axis labels -->
                     <text x="150" y="345" font-size="13" fill="#666" text-anchor="middle">2017-05</text>
@@ -312,32 +332,33 @@
                     <text x="800" y="345" font-size="13" fill="#666" text-anchor="middle">2017-10</text>
 
                     <!-- Target line (85%) -->
-                    <line x1="80" y1="212" x2="950" y2="212" stroke="#3fb950" stroke-width="2" stroke-dasharray="5,5"/>
-                    <text x="955" y="217" font-size="12" fill="#3fb950" font-weight="600">Target (85%)</text>
+                    <line x1="80" y1="110" x2="950" y2="110" stroke="#3fb950" stroke-width="2" stroke-dasharray="5,5"/>
+                    <text x="955" y="115" font-size="12" fill="#3fb950" font-weight="600">Target (85%)</text>
 
-                    <!-- Data line -->
-                    <polyline points="150,235 280,56 410,161 540,229 670,297 800,356"
+                    <!-- Data line - recalculated y positions for 50-100 scale -->
+                    <!-- 82.8% = 166, 90.9% = 54, 84.5% = 131, 79.0% = 166+71=237, 69.7% = 263, 58.7% = 288 -->
+                    <polyline points="150,166 280,54 410,131 540,237 670,263 800,288"
                               fill="none" stroke="#ef4444" stroke-width="3"/>
 
                     <!-- Data points -->
-                    <circle cx="150" cy="235" r="6" fill="#ef4444" stroke="white" stroke-width="2"/>
-                    <circle cx="280" cy="56" r="6" fill="#ef4444" stroke="white" stroke-width="2"/>
-                    <circle cx="410" cy="161" r="6" fill="#ef4444" stroke="white" stroke-width="2"/>
-                    <circle cx="540" cy="229" r="6" fill="#ef4444" stroke="white" stroke-width="2"/>
-                    <circle cx="670" cy="297" r="6" fill="#ef4444" stroke="white" stroke-width="2"/>
-                    <circle cx="800" cy="356" r="6" fill="#ef4444" stroke="white" stroke-width="2"/>
+                    <circle cx="150" cy="166" r="6" fill="#ef4444" stroke="white" stroke-width="2"/>
+                    <circle cx="280" cy="54" r="6" fill="#ef4444" stroke="white" stroke-width="2"/>
+                    <circle cx="410" cy="131" r="6" fill="#ef4444" stroke="white" stroke-width="2"/>
+                    <circle cx="540" cy="237" r="6" fill="#ef4444" stroke="white" stroke-width="2"/>
+                    <circle cx="670" cy="263" r="6" fill="#ef4444" stroke="white" stroke-width="2"/>
+                    <circle cx="800" cy="288" r="6" fill="#ef4444" stroke="white" stroke-width="2"/>
 
                     <!-- Value labels -->
-                    <text x="150" y="225" font-size="13" fill="#1e1e1e" font-weight="600" text-anchor="middle">82.8%</text>
-                    <text x="280" y="46" font-size="13" fill="#1e1e1e" font-weight="600" text-anchor="middle">90.9%</text>
-                    <text x="410" y="151" font-size="13" fill="#1e1e1e" font-weight="600" text-anchor="middle">84.5%</text>
-                    <text x="540" y="219" font-size="13" fill="#1e1e1e" font-weight="600" text-anchor="middle">79.0%</text>
-                    <text x="670" y="287" font-size="13" fill="#1e1e1e" font-weight="600" text-anchor="middle">69.7%</text>
-                    <text x="800" y="346" font-size="13" fill="#1e1e1e" font-weight="600" text-anchor="middle">58.7%</text>
+                    <text x="150" y="156" font-size="13" fill="#1e1e1e" font-weight="600" text-anchor="middle">82.8%</text>
+                    <text x="280" y="44" font-size="13" fill="#1e1e1e" font-weight="600" text-anchor="middle">90.9%</text>
+                    <text x="410" y="121" font-size="13" fill="#1e1e1e" font-weight="600" text-anchor="middle">84.5%</text>
+                    <text x="540" y="227" font-size="13" fill="#1e1e1e" font-weight="600" text-anchor="middle">79.0%</text>
+                    <text x="670" y="253" font-size="13" fill="#1e1e1e" font-weight="600" text-anchor="middle">69.7%</text>
+                    <text x="800" y="278" font-size="13" fill="#1e1e1e" font-weight="600" text-anchor="middle">58.7%</text>
 
                     <!-- Axis labels -->
                     <text x="500" y="380" font-size="14" fill="#666" text-anchor="middle">Month (2017)</text>
-                    <text x="30" y="200" font-size="14" fill="#666" text-anchor="middle" transform="rotate(-90 30 200)">Pass Rate (%)</text>
+                    <text x="30" y="170" font-size="14" fill="#666" text-anchor="middle" transform="rotate(-90 30 170)">Pass Rate (%)</text>
                 </svg>
             </div>
         </div>
