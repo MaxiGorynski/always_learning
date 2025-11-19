@@ -8,14 +8,12 @@ const KYCMonitoringDashboard = () => {
 
   // Mock data
   const passRateData = [
-    { week: 'Week 1', passRate: 90.9 },
-    { week: 'Week 2', passRate: 87.2 },
-    { week: 'Week 3', passRate: 84.6 },
-    { week: 'Week 4', passRate: 79.0 },
-    { week: 'Week 5', passRate: 74.5 },
-    { week: 'Week 6', passRate: 69.7 },
-    { week: 'Week 7', passRate: 64.3 },
-    { week: 'Week 8', passRate: 58.7 },
+    { week: '2017-05', passRate: 82.8 },
+    { week: '2017-06', passRate: 90.9 },
+    { week: '2017-07', passRate: 84.5 },
+    { week: '2017-08', passRate: 79.0 },
+    { week: '2017-09', passRate: 69.7 },
+    { week: '2017-10', passRate: 58.7 },
   ];
 
   const alertsData = [
@@ -217,14 +215,21 @@ const KYCMonitoringDashboard = () => {
           marginBottom: '1.5rem',
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
         }}>
-          <h1 style={{
-            margin: '0 0 1.5rem 0',
-            fontSize: '1.8rem',
-            fontWeight: '600',
-            color: '#1e1e1e'
-          }}>
-            Stats
-          </h1>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <h1 style={{
+              margin: 0,
+              fontSize: '1.8rem',
+              fontWeight: '600',
+              color: '#1e1e1e'
+            }}>
+              Stats
+            </h1>
+            <img
+              src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFoAAAAYCAYAAABR8BK1AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAMySURBVHgB7ZnNThNRFMf/504fKGAppYCxJiSKG1wYE+PChRtde4NuvIE+gT6BPoE+gT6BvoE+gW7cuNAYE0JcGBODQqHQTmnndvr5nzOdGQqdtjOdmbbE/pJJZ+49c8/v3nPvuWcuwP8sWZYxMTGBeDwOv9+PQCCAQCBwruM4DmzbRqvVQrvdRrPZRL1eR7VaRaVSQalUQqFQQC6Xw8HBAfL5PBzH+f+AZhiGUSwWo2QySeVyOcrlchSLxSgSiVAwGCQApwEej4cYhqFgMEh+v5/m5+dpYWGBUqkU3b9/nx48eECrq6u0tbVF2WyW9vf3aW9vj3K5HH348IF+/PhB3759I8MwznV+D4Cuq6urVK/XqVqt0snJCTUaDTKt+7uu67qupdZ1Xdu27Z0O3a7rUqvVolarhWq1Snt7e7S9vU1fv36lbDZLX758od3dXfrw4QMVCgXa3d2lYrFI+Xye9vf3yeVwBLSiKFhbW8PExATi8TjC4TCi0SiCwSACgQBCoRBCoRD8fj98Ph+8Xi88Hg/cbjdkWYYkSTg9vCQJ/f5fEO/t9f7rdDpwHAftdhvNZhP1eh21Wg3VahWlUgmlUgn7+/sol8sol8twXRf5fB4HBwdEREilUmAYBiqVCjRNg6qqUBQFiqJA1/W+7z0A2jAMlEolqh0xDHO+cw+ABgBZlqGqKhKJBObm5rC0tISZmRlMT09jcnISiUQCmqZheHgYyWQSMzMzmJ6eRiKRwNDQEIaGhqBpGjRNg67rUBQFg8PDUBTFi/xtcITOe1bqrYsQ/b8xtLY8w7Ys9UjEUldXV6BWq6FarULXdSiKAkVRoKoqNE2DruvQdR1DQ0PQNA2jo6MYGxvD+Pg4JicnkUqlsLCwgPn5eSwuLuLRo0dYWlrC0tISHj9+jOXlZSwvL+PJkyd4+vQpnj17hufPn2NtbQ2ZTAavXr1CJpPBmzdv8Pr1a7x9+xbv3r3D+/fv8f79e3z8+BGfPn3C58+fkcvlkMvlsLOzg52dHayvrwPo3oPW1taQyWSQzWaRz+eRzWaRy+VQKBRQLBZRLBZRLBZRKpWwv7+PcrmMXC4Hy7I8B93BsizYto1Wq4VmswnXdbsPuuu6aLfbaDQa0HUdsixDkiR4PB54vV54vV54vV74fD5wHAee43D58mW4XC7IsgxJkuByue7MCf8Cf/dW+7GQObQAAAAASUVORK5CYII="
+              alt="LightWork AI"
+              style={{ height: '30px' }}
+            />
+          </div>
 
           {/* Tabs */}
           <div style={{ display: 'flex', gap: '2rem', borderBottom: '1px solid #e0e0e0', marginBottom: '1rem' }}>
@@ -269,6 +274,93 @@ const KYCMonitoringDashboard = () => {
               <option value="last-month">Date Range: Last month</option>
             </select>
           </div>
+        </div>
+
+        {/* Monthly Pass Rate Decline Chart */}
+        <div style={{
+          background: 'rgba(255,255,255,0.95)',
+          borderRadius: '8px',
+          padding: '2rem',
+          marginBottom: '1.5rem',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+        }}>
+          <h2 style={{
+            margin: '0 0 1.5rem 0',
+            fontSize: '1.5rem',
+            fontWeight: '600',
+            color: '#1e1e1e',
+            textAlign: 'center'
+          }}>
+            Monthly KYC Pass Rate Decline
+          </h2>
+          <ResponsiveContainer width="100%" height={400}>
+            <LineChart
+              data={passRateData}
+              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#e8e8f0" vertical={false} />
+              <XAxis
+                dataKey="week"
+                tick={{ fontSize: 13, fill: '#666' }}
+                axisLine={{ stroke: '#e0e0e0' }}
+                label={{ value: 'Month (2017)', position: 'insideBottom', offset: -10, style: { fill: '#666', fontSize: 14 } }}
+              />
+              <YAxis
+                domain={[50, 100]}
+                tick={{ fontSize: 13, fill: '#666' }}
+                axisLine={{ stroke: '#e0e0e0' }}
+                label={{ value: 'Pass Rate (%)', angle: -90, position: 'insideLeft', style: { fill: '#666', fontSize: 14 } }}
+              />
+              <Tooltip
+                contentStyle={{
+                  background: 'rgba(255,255,255,0.95)',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '6px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                }}
+              />
+              <Legend
+                verticalAlign="top"
+                height={36}
+                iconType="line"
+                wrapperStyle={{ fontSize: '13px' }}
+              />
+              {/* Target line at 85% */}
+              <Line
+                type="monotone"
+                dataKey={() => 85}
+                stroke="#3fb950"
+                strokeWidth={2}
+                strokeDasharray="5 5"
+                name="Target (85%)"
+                dot={false}
+              />
+              {/* Actual pass rate line */}
+              <Line
+                type="monotone"
+                dataKey="passRate"
+                stroke="#ef4444"
+                strokeWidth={3}
+                name="Pass Rate"
+                dot={{
+                  fill: '#ef4444',
+                  strokeWidth: 2,
+                  r: 6,
+                  stroke: '#fff'
+                }}
+                activeDot={{ r: 8 }}
+                label={{
+                  position: 'top',
+                  style: {
+                    fontSize: 13,
+                    fontWeight: '600',
+                    fill: '#1e1e1e'
+                  },
+                  formatter: (value) => `${value.toFixed(1)}%`
+                }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
 
         {/* Pass Rate Health */}
