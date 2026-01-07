@@ -18,4 +18,4 @@ If multiple roles interact with the feature, are they all tested? This PR tests 
 
 **Data variations** - 
 Does it test with different data combinations, or just one golden path? The search/filter tests here are a good example of varying inputs.
-Cleanup discipline - Do tests clean up after themselves so they don't pollute other test runs? The afterEach API cleanup here is correct.
+Cleanup discipline - Do tests clean up after themselves so they don't pollute other test runs? The afterEach API cleanup here is correct...
