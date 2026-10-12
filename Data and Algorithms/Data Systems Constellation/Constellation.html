@@ -320,3 +320,9 @@ const EDGES = [
  ["wamp","checkpoint","After each checkpoint, Postgres logs full-page images, amplifying writes."]
 ];
 /*END*/
+
+const prefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const byId = {}; const nodes = NODES.map(([id,name,cl,def],i)=>{const n={id,name,cl,def,i,links:[]};byId[id]=n;return n;});
+const edges = EDGES.map(([a,b,rel],i)=>{const e={a:byId[a],b:byId[b],rel,i};e.a.links.push(e);e.b.links.push(e);return e;});
+document.getElementById('meta').textContent = `${nodes.length} concepts · ${edges.length} relations`;
+
