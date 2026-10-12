@@ -326,3 +326,23 @@ const byId = {}; const nodes = NODES.map(([id,name,cl,def],i)=>{const n={id,name
 const edges = EDGES.map(([a,b,rel],i)=>{const e={a:byId[a],b:byId[b],rel,i};e.a.links.push(e);e.b.links.push(e);return e;});
 document.getElementById('meta').textContent = `${nodes.length} concepts · ${edges.length} relations`;
 
+/* ---------- 3D force layout (seeded, computed once) ---------- */
+let seed=7; const rnd=()=>((seed=(seed*16807)%2147483647)-1)/2147483646;
+const clusterKeys=Object.keys(CLUSTERS), R=270;
+const centers={}; clusterKeys.forEach((k,i)=>{const y=1-(i+.5)/clusterKeys.length*2, r=Math.sqrt(1-y*y), t=i*2.39996;centers[k]=[Math.cos(t)*r*R*.72,y*R*.72,Math.sin(t)*r*R*.72];});
+nodes.forEach(n=>{const c=centers[n.cl];n.x=c[0]+(rnd()-.5)*90;n.y=c[1]+(rnd()-.5)*90;n.z=c[2]+(rnd()-.5)*90;n.vx=n.vy=n.vz=0;});
+for(let it=0;it<420;it++){
+  const cool=1-it/420;
+  for(let i=0;i<nodes.length;i++){const a=nodes[i];
+    for(let j=i+1;j<nodes.length;j++){const b=nodes[j];
+      let dx=a.x-b.x,dy=a.y-b.y,dz=a.z-b.z,d2=dx*dx+dy*dy+dz*dz+.01;const f=2600/d2,d=Math.sqrt(d2);
+      dx/=d;dy/=d;dz/=d;a.vx+=dx*f;a.vy+=dy*f;a.vz+=dz*f;b.vx-=dx*f;b.vy-=dy*f;b.vz-=dz*f;}}
+  edges.forEach(e=>{const a=e.a,b=e.b;let dx=b.x-a.x,dy=b.y-a.y,dz=b.z-a.z,d=Math.hypot(dx,dy,dz)||1;const f=(d-95)*.02;
+    dx/=d;dy/=d;dz/=d;a.vx+=dx*f;a.vy+=dy*f;a.vz+=dz*f;b.vx-=dx*f;b.vy-=dy*f;b.vz-=dz*f;});
+  nodes.forEach(n=>{const c=centers[n.cl];n.vx+=(c[0]-n.x)*.012-n.x*.004;n.vy+=(c[1]-n.y)*.012-n.y*.004;n.vz+=(c[2]-n.z)*.012-n.z*.004;
+    const m=Math.min(1,Math.hypot(n.vx,n.vy,n.vz))*0+1; n.x+=n.vx*.5*cool*m;n.y+=n.vy*.5*cool;n.z+=n.vz*.5*cool;n.vx*=.6;n.vy*=.6;n.vz*=.6;});
+}
+// recentre and normalise radius
+{let mx=0,my=0,mz=0;nodes.forEach(n=>{mx+=n.x;my+=n.y;mz+=n.z});mx/=nodes.length;my/=nodes.length;mz/=nodes.length;
+ let rmax=0;nodes.forEach(n=>{n.x-=mx;n.y-=my;n.z-=mz;rmax=Math.max(rmax,Math.hypot(n.x,n.y,n.z))});const k=R/rmax;nodes.forEach(n=>{n.x*=k;n.y*=k;n.z*=k});}
+
