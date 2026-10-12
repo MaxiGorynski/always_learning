@@ -112,3 +112,16 @@ const NODES = [
  ["ios","Index-Only Scan","storage","Answer a query entirely from the index, never visiting the table."],
  ["pitr","Backups vs. Point-in-Time Recovery","storage","A backup is one moment frozen; PITR restores a base backup and replays WAL to any chosen instant."],
 
+ ["acid","ACID Properties","txn","Atomicity, Consistency, Isolation, Durability: the four guarantees of a transaction."],
+ ["mvcc","MVCC","txn","Keep multiple versions of each row so readers see a snapshot and never block writers."],
+ ["si","Snapshot Isolation","txn","Each transaction reads from a consistent snapshot taken at its start."],
+ ["serial","Serializability","txn","Strongest isolation: the outcome equals some one-at-a-time ordering of transactions."],
+ ["dirty","Dirty Read","txn","Reading another transaction’s uncommitted writes."],
+ ["rskew","Read Skew","txn","Seeing parts of the database at different moments, so related values don’t add up."],
+ ["wskew","Write Skew","txn","Two transactions read the same data, write different rows, and jointly break an invariant."],
+ ["phantom","Phantom Read","txn","A repeated range query returns rows another transaction just inserted."],
+ ["optlock","Optimistic Locking","txn","Take no locks; check a version on write and retry on conflict."],
+ ["pesslock","Pessimistic Locking","txn","Lock before reading or writing; everyone else waits."],
+ ["deadlock","Deadlock","txn","Transactions wait on each other’s locks in a cycle; the database kills one."],
+ ["escalation","Lock Escalation","txn","The database swaps many row locks for one table lock to save memory."],
+
