@@ -165,3 +165,14 @@ const NODES = [
  ["federation","Federation","part","Split databases by function: users DB, orders DB, billing DB."],
  ["locality","Data Locality","part","Keep related data together, and computation near the data."],
 
+ ["lb","Load Balancing","traffic","Spread requests across instances."],
+ ["cache","Caching","traffic","Keep hot data in faster storage. Invalidation is the hard part."],
+ ["ratelimit","Rate Limiting","traffic","Cap requests per client per time window."],
+ ["backpressure","Backpressure","traffic","Downstream signals upstream to slow down instead of drowning."],
+ ["breaker","Circuit Breaker","traffic","Stop calling a failing dependency; fail fast, probe again later."],
+ ["retrystorm","Retry Storm","traffic","Mass retries pile more load onto a service that is already struggling."],
+ ["herd","Thundering Herd","traffic","Many clients wake at once and stampede one resource."],
+ ["pool","Connection Pooling","traffic","Reuse a fixed set of open database connections instead of opening one per request."],
+ ["mux","Connection Multiplexing","traffic","Many logical streams share one physical connection."],
+ ["leaks","Database Connection Leaks","traffic","Connections borrowed and never returned, until the pool runs dry."],
+
