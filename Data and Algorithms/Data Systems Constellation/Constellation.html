@@ -546,6 +546,7 @@ addEventListener('keydown',ev=>{
 });
 document.getElementById('zin').onclick=()=>zoomBy(.7);
 document.getElementById('zout').onclick=()=>zoomBy(1/.7);
+document.getElementById('zreset').onclick=()=>{clusterFocus=null;deselect();};
 
 function select(n){selected=n;hoverNode=null;goal.c=[n.x,n.y,n.z];goal.dist=Math.min(goal.dist,640);renderNode(n,false);}
 function deselect(){selected=null;goal.c=[0,0,0];goal.dist=950;renderIntro();}
