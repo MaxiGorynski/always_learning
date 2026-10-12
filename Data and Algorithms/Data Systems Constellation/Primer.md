@@ -74,3 +74,15 @@ Bitesized definitions for the 80 concepts in `Constellation.html`, grouped by re
 - **Data Locality**: Keep related data together, and compute near the data.
 
 ## Traffic & resilience
+- **Load Balancing**: Spread requests across instances.
+- **Caching**: Keep hot data in faster storage; invalidation is the hard part.
+- **Rate Limiting**: Cap requests per client per time window.
+- **Backpressure**: Downstream tells upstream to slow down.
+- **Circuit Breaker**: Stop calling a failing dependency; fail fast, probe later.
+- **Retry Storm**: Mass retries pile load onto an already struggling service.
+- **Thundering Herd**: Many clients wake at once and stampede a resource.
+- **Connection Pooling**: Reuse open DB connections instead of opening one per request.
+- **Connection Multiplexing**: Many logical streams share one physical connection.
+- **Connection Leaks**: Connections borrowed and never returned until the pool runs dry.
+
+## Modeling & querying
