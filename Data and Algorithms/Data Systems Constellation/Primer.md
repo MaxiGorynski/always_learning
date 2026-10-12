@@ -45,3 +45,19 @@ Bitesized definitions for the 80 concepts in `Constellation.html`, grouped by re
 - **Exactly-Once Semantics**: Each message takes effect once; really at-least-once delivery plus deduplication.
 
 ## Replication & consistency
+- **CAP Theorem**: During a network partition, choose consistency or availability.
+- **Strong Consistency**: Every read sees the latest committed write.
+- **Eventual Consistency**: Replicas converge once writes stop; reads may be stale meanwhile.
+- **Consistent Reads**: Reads with a stated guarantee: read-your-writes, monotonic, or from the leader.
+- **Leader–Follower Replication**: One node takes writes; followers copy its log.
+- **Multi-Leader Replication**: Several nodes accept writes; conflicts must be resolved.
+- **Read Replicas**: Followers that serve read-only traffic.
+- **Physical Replication**: Ships byte-level page changes; exact clone, same version.
+- **Logical Replication**: Ships row-level changes; selective and cross-version.
+- **Geo-Replication**: Copies across regions for latency and disaster recovery.
+- **Read Repair**: Fix stale replicas during a read.
+- **Change Data Capture (CDC)**: Stream row changes out of the database log to other systems.
+- **Failover**: Promote a standby when the primary dies.
+- **High Availability**: Redundancy plus automatic recovery, measured in "nines".
+
+## Partitioning & scale
