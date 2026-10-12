@@ -372,3 +372,12 @@ function proj(x,y,z,noCenter){
   const s=FOV/Math.max(d,1); return {x:W/2+offX+x1*s, y:H/2+offY+y1*s, z:z2, s, ok:d>60};
 }
 
+/* ---------- state ---------- */
+let selected=null, hoverNode=null, hoverEdge=null, clusterFocus=null, lastInteract=0;
+const P=new Array(nodes.length);
+
+function focusSet(){
+  const f=selected||hoverNode; if(!f) return null;
+  const s=new Set([f]); f.links.forEach(e=>{s.add(e.a);s.add(e.b)}); return s;
+}
+
