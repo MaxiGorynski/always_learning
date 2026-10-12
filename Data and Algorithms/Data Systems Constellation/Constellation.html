@@ -86,3 +86,15 @@ body{background:var(--ink);color:var(--ivory);font-family:var(--f-body);overflow
 
 <aside class="panel" aria-live="polite"><div class="panel-scroll" id="panel"></div></aside>
 <div id="tip" hidden></div>
+
+<script>
+/*DATA*/
+const CLUSTERS = {
+  storage:  {name:"Storage engines",          color:"#e7b660"},
+  txn:      {name:"Transactions & isolation", color:"#f08a7c"},
+  consensus:{name:"Consensus & coordination", color:"#ab9bf6"},
+  repl:     {name:"Replication & consistency",color:"#63b9ea"},
+  part:     {name:"Partitioning & scale",     color:"#7ed3a8"},
+  traffic:  {name:"Traffic & resilience",     color:"#cfd86c"},
+  model:    {name:"Modeling & querying",      color:"#ea8fca"}
+};
