@@ -346,3 +346,6 @@ for(let it=0;it<420;it++){
 {let mx=0,my=0,mz=0;nodes.forEach(n=>{mx+=n.x;my+=n.y;mz+=n.z});mx/=nodes.length;my/=nodes.length;mz/=nodes.length;
  let rmax=0;nodes.forEach(n=>{n.x-=mx;n.y-=my;n.z-=mz;rmax=Math.max(rmax,Math.hypot(n.x,n.y,n.z))});const k=R/rmax;nodes.forEach(n=>{n.x*=k;n.y*=k;n.z*=k});}
 
+/* ---------- starfield ---------- */
+const stars=[];for(let i=0;i<520;i++){const u=rnd()*2-1,t=rnd()*Math.PI*2,r=Math.sqrt(1-u*u),D=2200+rnd()*1400;stars.push({x:Math.cos(t)*r*D,y:u*D,z:Math.sin(t)*r*D,b:rnd()});}
+
