@@ -61,3 +61,16 @@ Bitesized definitions for the 80 concepts in `Constellation.html`, grouped by re
 - **High Availability**: Redundancy plus automatic recovery, measured in "nines".
 
 ## Partitioning & scale
+- **Horizontal Scaling**: More machines, not bigger ones.
+- **Database Sharding**: Split data across databases by a shard key.
+- **Hash Partitioning**: Assign keys by hash; even spread, no range scans.
+- **Range Partitioning**: Assign contiguous key ranges; fast range scans, hotspot risk.
+- **Consistent Hashing**: Keys and nodes on a ring; a membership change moves only ~1/n of keys.
+- **Hot Partition**: One partition gets a disproportionate share of traffic.
+- **Data Skew**: Uneven data distribution across keys or partitions.
+- **Resharding**: Changing shard count or boundaries while live.
+- **Rebalancing**: Moving partitions between nodes to even out load.
+- **Federation**: Split databases by function (users DB, orders DB).
+- **Data Locality**: Keep related data together, and compute near the data.
+
+## Traffic & resilience
