@@ -35,7 +35,7 @@ body{background:var(--ink);color:var(--ivory);font-family:var(--f-body);overflow
 .results button{all:unset;box-sizing:border-box;display:flex;gap:10px;align-items:center;width:100%;padding:7px 12px;font:13px var(--f-mono);cursor:pointer;color:var(--ivory)}
 .results button:hover,.results button:focus-visible,.results button.active{background:var(--line)}
 
-.panel{position:fixed;top:calc(env(safe-area-inset-top,0px) + 20px);right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);width:330px;display:flex;flex-direction:column;background:color-mix(in srgb,var(--ink-2) 88%,transparent);border:1px solid var(--line);backdrop-filter:blur(10px);overflow:hidden}
+.panel{position:fixed;top:calc(env(safe-area-inset-top,0px) + 20px);right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);width:370px;display:flex;flex-direction:column;background:color-mix(in srgb,var(--ink-2) 88%,transparent);border:1px solid var(--line);backdrop-filter:blur(10px);overflow:hidden}
 .panel-scroll{overflow-y:auto;padding:22px 22px 26px;display:grid;gap:18px;align-content:start}
 .eyebrow{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mist);display:flex;align-items:center;gap:8px}
 .dot{width:8px;height:8px;border-radius:50%;flex:none;box-shadow:0 0 10px currentColor;background:currentColor}
@@ -56,6 +56,16 @@ body{background:var(--ink);color:var(--ivory);font-family:var(--f-body);overflow
 .legend button[aria-pressed="true"]{background:var(--line);outline:1px solid var(--halo);outline-offset:-1px}
 .close{all:unset;cursor:pointer;font:11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mist);padding:4px 0;justify-self:start}
 .close:hover,.close:focus-visible{color:var(--halo)}
+.facet{display:grid;gap:7px}
+.facet p{margin:0;font-size:13.5px;line-height:1.6;color:var(--ivory)}
+.facet.example p{font-size:13px;color:var(--ivory);background:color-mix(in srgb,var(--ink) 70%,transparent);border:1px solid var(--line);padding:11px 13px}
+.facet.example code{font-family:var(--f-mono);font-size:12px;color:var(--halo)}
+.facet.analogy p{font-family:var(--f-display);font-style:italic;font-size:19px;line-height:1.35;color:var(--halo)}
+.facet.why p+p{margin-top:2px}
+.more{font-family:var(--f-mono);font-size:11px;color:var(--mist);letter-spacing:.04em}
+.members{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0;padding:0}
+.members button{all:unset;cursor:pointer;font:12px var(--f-mono);padding:5px 9px;border:1px solid var(--line);color:var(--ivory)}
+.members button:hover,.members button:focus-visible{border-color:var(--halo);color:var(--halo)}
 .hint{font-family:var(--f-mono);font-size:11px;color:var(--mist);line-height:1.7;border-top:1px solid var(--line);padding-top:14px}
 .hint kbd{font:inherit;color:var(--ivory)}
 
@@ -374,7 +384,7 @@ const canvas=document.getElementById('sky'),ctx=canvas.getContext('2d');
 let W=0,H=0,FOV=1,offX=0;
 const cam={yaw:.5,pitch:-.28,dist:950,c:[0,0,0]}, goal={dist:950,c:[0,0,0]};
 function resize(){const dpr=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;canvas.width=W*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
-  const desktop=W>820; offX=desktop?-175:0; const usableW=desktop?W-370:W, usableH=desktop?H:H*.62;
+  const desktop=W>820; offX=desktop?-195:0; const usableW=desktop?W-410:W, usableH=desktop?H:H*.62;
   FOV=Math.min(usableW,usableH)*1.25; if(!desktop) offY=-H*.17; else offY=0;}
 let offY=0; addEventListener('resize',resize); resize();
 
