@@ -125,3 +125,16 @@ const NODES = [
  ["deadlock","Deadlock","txn","Transactions wait on each other’s locks in a cycle; the database kills one."],
  ["escalation","Lock Escalation","txn","The database swaps many row locks for one table lock to save memory."],
 
+ ["dtx","Distributed Transactions","consensus","One atomic transaction spanning multiple nodes or services."],
+ ["2pc","Two-Phase Commit (2PC)","consensus","Coordinator says prepare, then commit. Participants block if the coordinator dies in between."],
+ ["3pc","Three-Phase Commit (3PC)","consensus","Adds a pre-commit phase to avoid 2PC’s blocking; unsafe under network partitions."],
+ ["saga","Saga Pattern","consensus","A chain of local transactions, each with a compensating undo."],
+ ["generals","Two Generals Problem","consensus","Proof that agreement over an unreliable channel can never be certain."],
+ ["raft","Raft Consensus","consensus","An elected leader replicates a log; entries commit once a majority holds them."],
+ ["election","Leader Election","consensus","Nodes agree on exactly one coordinator, and pick a new one on failure."],
+ ["quorum","Quorum","consensus","Require W + R > N acknowledgements so every read overlaps the latest write."],
+ ["split","Split-Brain","consensus","Two nodes both believe they lead, accepting divergent writes."],
+ ["dlock","Distributed Locking","consensus","Mutual exclusion across machines; needs leases and fencing tokens to be safe."],
+ ["idem","Idempotency","consensus","Doing it twice has the same effect as doing it once. Makes retries safe."],
+ ["eos","Exactly-Once Semantics","consensus","Each message takes effect once; really at-least-once delivery plus deduplication."],
+
