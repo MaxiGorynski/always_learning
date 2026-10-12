@@ -381,3 +381,75 @@ function focusSet(){
   const s=new Set([f]); f.links.forEach(e=>{s.add(e.a);s.add(e.b)}); return s;
 }
 
+/* ---------- render ---------- */
+let t0=performance.now();
+function frame(now){
+  const dt=Math.min(50,now-t0);t0=now;
+  if(!dragging && !prefersReduced && now-lastInteract>2500 && !hoverEdge && !hoverNode) cam.yaw+=dt*.00006;
+  const k=1-Math.pow(.004,dt/1000);
+  cam.dist+=(goal.dist-cam.dist)*k; for(let i=0;i<3;i++) cam.c[i]+=(goal.c[i]-cam.c[i])*k;
+  cy=Math.cos(cam.yaw);sy=Math.sin(cam.yaw);cp=Math.cos(cam.pitch);sp=Math.sin(cam.pitch);
+
+  ctx.clearRect(0,0,W,H);
+  // vignette ground
+  const bg=ctx.createRadialGradient(W/2+offX,H/2+offY,0,W/2+offX,H/2+offY,Math.max(W,H)*.7);
+  bg.addColorStop(0,'#111831');bg.addColorStop(1,'#080b14');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+
+  // stars
+  for(const s of stars){const p=proj(s.x,s.y,s.z,true);if(!p.ok)continue;ctx.fillStyle=`rgba(220,226,255,${.12+s.b*.35})`;const r=.4+s.b*.8;ctx.fillRect(p.x,p.y,r,r);}
+
+  nodes.forEach(n=>{P[n.i]=proj(n.x,n.y,n.z)});
+  const F=focusSet();
+  const depthA=p=>Math.max(.12,Math.min(1,.62-p.z/(R*1.6)));
+  const dimOf=n=> (F? (F.has(n)?1:.1) : clusterFocus? (n.cl===clusterFocus?1:.12) : 1);
+
+  // edges
+  ctx.lineCap='round';
+  const hot=[];
+  for(const e of edges){
+    const pa=P[e.a.i],pb=P[e.b.i]; if(!pa.ok||!pb.ok) continue;
+    const focusEdge = e===hoverEdge || (F && (selected||hoverNode) && (e.a===(selected||hoverNode)||e.b===(selected||hoverNode)));
+    if(focusEdge){hot.push(e);continue;}
+    let a=Math.min(depthA(pa),depthA(pb))*.32*Math.min(dimOf(e.a),dimOf(e.b));
+    if(F) a*=.5;
+    const g=ctx.createLinearGradient(pa.x,pa.y,pb.x,pb.y);
+    g.addColorStop(0,hexA(CLUSTERS[e.a.cl].color,a));g.addColorStop(1,hexA(CLUSTERS[e.b.cl].color,a));
+    ctx.strokeStyle=g;ctx.lineWidth=Math.max(.6,(pa.s+pb.s)*.5);ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);ctx.stroke();
+  }
+  for(const e of hot){
+    const pa=P[e.a.i],pb=P[e.b.i], isH=e===hoverEdge;
+    const g=ctx.createLinearGradient(pa.x,pa.y,pb.x,pb.y);
+    g.addColorStop(0,hexA(CLUSTERS[e.a.cl].color,isH?1:.85));g.addColorStop(1,hexA(CLUSTERS[e.b.cl].color,isH?1:.85));
+    ctx.strokeStyle=g;ctx.lineWidth=isH?2.6:1.6;
+    if(isH){ctx.shadowColor='rgba(244,223,168,.8)';ctx.shadowBlur=12;}
+    ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);ctx.stroke();ctx.shadowBlur=0;
+    if(!prefersReduced){const u=((now*.00035)+e.i*.17)%1;ctx.fillStyle='rgba(255,248,230,.95)';ctx.beginPath();ctx.arc(pa.x+(pb.x-pa.x)*u,pa.y+(pb.y-pa.y)*u,isH?2.4:1.7,0,7);ctx.fill();}
+  }
+
+  // nodes back to front
+  const order=nodes.filter(n=>P[n.i].ok).sort((a,b)=>P[b.i].z-P[a.i].z);
+  for(const n of order){
+    const p=P[n.i], dim=dimOf(n), focal=n===selected||n===hoverNode;
+    const r=(2.6+n.links.length*.75)*p.s*(focal?1.5:1);
+    ctx.globalAlpha=depthA(p)*dim*(focal?1:.95);
+    const S=r*7; ctx.drawImage(sprites[n.cl],p.x-S/2,p.y-S/2,S,S);
+    if(focal){ctx.globalAlpha=1;ctx.strokeStyle='rgba(244,223,168,.9)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(p.x,p.y,r*2.1,0,7);ctx.stroke();}
+    ctx.globalAlpha=1;
+  }
+  // labels
+  ctx.textBaseline='middle';
+  for(const n of order){
+    const p=P[n.i], dim=dimOf(n), focal=n===selected||n===hoverNode, inF=F&&F.has(n);
+    let a=Math.pow(depthA(p),1.6)*dim; if(inF) a=Math.max(a,.9); if(focal) a=1;
+    if(a<.06) continue;
+    const fs=Math.max(9,Math.min(focal?17:14,(focal?14:10.5)*p.s));
+    ctx.font=`${focal?500:400} ${fs}px "IBM Plex Mono", ui-monospace, Menlo, monospace`;
+    const r=(2.6+n.links.length*.75)*p.s*(focal?1.5:1);
+    ctx.fillStyle = focal? '#f4dfa8' : `rgba(236,230,216,${a})`;
+    if(inF && !focal) ctx.fillStyle=hexA(CLUSTERS[n.cl].color,Math.min(1,a+.1));
+    ctx.fillText(n.name, p.x+r*1.9+4, p.y);
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
