@@ -526,3 +526,31 @@ addEventListener('keydown',ev=>{if(ev.key==='Escape'){if(selected)deselect();clu
 function select(n){selected=n;hoverNode=null;goal.c=[n.x,n.y,n.z];goal.dist=Math.min(goal.dist,640);renderNode(n,false);}
 function deselect(){selected=null;goal.c=[0,0,0];goal.dist=950;renderIntro();}
 
+/* ---------- panel ---------- */
+const panel=document.getElementById('panel');
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function renderNode(n,preview){
+  const C=CLUSTERS[n.cl];
+  panel.innerHTML=`
+    ${preview?'':'<button class="close" id="back">← All concepts</button>'}
+    <div class="eyebrow" style="color:${C.color}"><span class="dot"></span><span style="color:var(--mist)">${C.name}</span></div>
+    <h2>${esc(n.name)}</h2>
+    <p class="def">${esc(n.def)}</p>
+    <div class="eyebrow">Linked to ${n.links.length}</div>
+    <ul class="links">${n.links.map(e=>{const o=e.a===n?e.b:e.a;return `<li><button data-id="${o.id}"><span class="dot" style="color:${CLUSTERS[o.cl].color}"></span><span class="nm">${esc(o.name)}</span><span class="rel">${esc(e.rel)}</span></button></li>`}).join('')}</ul>`;
+  const b=document.getElementById('back'); if(b) b.onclick=deselect;
+  panel.querySelectorAll('.links button').forEach(btn=>btn.onclick=()=>select(byId[btn.dataset.id]));
+  panel.parentElement.scrollTop=0; panel.scrollTop=0;
+}
+function renderIntro(){
+  const counts={};nodes.forEach(n=>counts[n.cl]=(counts[n.cl]||0)+1);
+  panel.innerHTML=`
+    <div class="eyebrow">Star chart</div>
+    <p class="intro">Each star is a concept; each line is a relationship. <b>Hover a line</b> to read how two concepts connect. <b>Click a star</b> to fly to it and see its definition and links.</p>
+    <div class="eyebrow">Regions</div>
+    <ul class="legend">${clusterKeys.map(k=>`<li><button data-cl="${k}" aria-pressed="${clusterFocus===k}"><span class="dot" style="color:${CLUSTERS[k].color}"></span>${CLUSTERS[k].name}<span class="ct">${counts[k]}</span></button></li>`).join('')}</ul>
+    <div class="hint"><kbd>Drag</kbd> to orbit · <kbd>Scroll</kbd> to zoom<br><kbd>Esc</kbd> to return · regions filter on click</div>`;
+  panel.querySelectorAll('.legend button').forEach(btn=>btn.onclick=()=>{clusterFocus=clusterFocus===btn.dataset.cl?null:btn.dataset.cl;renderIntro();});
+}
+renderIntro();
+
