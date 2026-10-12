@@ -554,3 +554,25 @@ function renderIntro(){
 }
 renderIntro();
 
+/* ---------- search ---------- */
+const q=document.getElementById('q'),res=document.getElementById('results');let active=0,matches=[];
+function drawResults(){
+  const v=q.value.trim().toLowerCase();
+  if(!v){res.hidden=true;return;}
+  matches=nodes.filter(n=>n.name.toLowerCase().includes(v)).slice(0,7);
+  if(!matches.length){res.innerHTML=`<li><button disabled style="color:var(--mist);cursor:default">No concept matches “${esc(q.value)}”</button></li>`;res.hidden=false;return;}
+  active=Math.min(active,matches.length-1);
+  res.innerHTML=matches.map((n,i)=>`<li><button data-id="${n.id}" class="${i===active?'active':''}"><span class="dot" style="color:${CLUSTERS[n.cl].color}"></span>${esc(n.name)}</button></li>`).join('');
+  res.hidden=false;
+  res.querySelectorAll('button[data-id]').forEach(b=>b.onclick=()=>pick(byId[b.dataset.id]));
+}
+function pick(n){select(n);q.value='';res.hidden=true;q.blur();}
+q.addEventListener('input',()=>{active=0;drawResults();});
+q.addEventListener('keydown',ev=>{
+  if(ev.key==='ArrowDown'){active=Math.min(active+1,matches.length-1);drawResults();ev.preventDefault();}
+  else if(ev.key==='ArrowUp'){active=Math.max(active-1,0);drawResults();ev.preventDefault();}
+  else if(ev.key==='Enter'&&matches[active]){pick(matches[active]);}
+  else if(ev.key==='Escape'){q.value='';res.hidden=true;}
+});
+q.addEventListener('blur',()=>setTimeout(()=>res.hidden=true,150));
+</script>
