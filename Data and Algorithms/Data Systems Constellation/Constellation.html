@@ -121,6 +121,37 @@ const CLUSTERS = {
   traffic:  {name:"Traffic & resilience",     color:"#cfd86c"},
   model:    {name:"Modeling & querying",      color:"#ea8fca"}
 };
+// about = what the region covers · why = where it shows up in day-to-day engineering
+const REGIONS = {
+  storage:{about:"How a single database physically lays data out on disk and memory: the index structures, logs and maintenance jobs underneath every query. Each engine trades read speed, write speed and space against one another.",
+   why:["Choosing a database is choosing a storage engine. Postgres (B-tree) and Cassandra (LSM) behave very differently under write-heavy load.",
+        "Slow queries, table bloat and disk filling up are usually storage problems: a missing index, autovacuum falling behind, or WAL piling up.",
+        "Backups and point-in-time recovery decide whether a bad migration costs you minutes or a week of data."]},
+  txn:{about:"What happens when many requests touch the same data at once. Isolation levels, anomalies and locking strategies decide which interleavings your code can ever observe.",
+   why:["Most race-condition bugs in web apps are isolation anomalies: double bookings, oversold stock, negative balances.",
+        "Your database’s default isolation level is probably weaker than you assume (READ COMMITTED in Postgres).",
+        "Picking optimistic or pessimistic locking shapes your API: retries and 409 responses, or waiting and deadlocks."]},
+  consensus:{about:"Getting machines that can crash, pause or lose messages to agree: on a leader, on a commit, on who holds a lock. These are the hardest correctness problems in distributed systems.",
+   why:["Any workflow that spans two services (charge the card, then reserve stock) faces these problems whether you name them or not.",
+        "Retries are unavoidable over a network, so idempotency keys are a basic API-design skill.",
+        "Kubernetes, Kafka and most managed databases run on Raft-style consensus; knowing it explains their failure modes."]},
+  repl:{about:"Keeping copies of data on several machines for availability, read scale and locality, and deciding what readers may see while those copies disagree.",
+   why:["Read replicas and failover are standard in every managed database, and so is replica lag, the cause of ‘I saved it but it vanished’ bugs.",
+        "CAP and consistency models tell you what a vendor’s guarantees actually mean during an outage.",
+        "CDC is how data leaves the primary database to reach search, caches, analytics and other services."]},
+  part:{about:"Splitting data and load across machines once one is no longer enough. The partitioning scheme decides how evenly load spreads, which queries stay cheap, and how painful growth becomes.",
+   why:["Shard keys are close to irreversible. A poor choice means hot partitions and a painful migration later.",
+        "DynamoDB, Cassandra, Kafka and Elasticsearch all ask you to choose partition keys up front.",
+        "Skew is behind most ‘one node at 100%, the rest idle’ incidents."]},
+  traffic:{about:"Controlling how requests flow between services so that one slow component degrades gracefully instead of taking everything down with it.",
+   why:["Most large outages are cascading failures: retries, herds and exhausted pools, not the original fault.",
+        "Timeouts, backoff and circuit breakers are decisions you make in every client you write.",
+        "Connection pool sizing is one of the most common production misconfigurations."]},
+  model:{about:"How data is shaped for its readers and writers: normalized for integrity, denormalized or projected for speed, and evolved safely over time. The query planner turns those shapes into actual work.",
+   why:["Schema design decides which features will be easy or hard to build for years afterwards.",
+        "Reading EXPLAIN output is the fastest way to fix a slow endpoint.",
+        "Every schema change in production must stay compatible with code that is still running the old version."]}
+};
 const NODES = [
  ["btree","B-Tree","storage","Balanced tree of fixed-size pages, updated in place. The default index structure, tuned for reads."],
  ["lsm","LSM Tree","storage","Buffers writes in memory, flushes sorted immutable files, merges them in the background. Tuned for writes."],
