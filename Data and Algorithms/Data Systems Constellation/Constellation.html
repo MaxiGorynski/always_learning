@@ -845,6 +845,13 @@ function deselect(){selected=null;goal.c=[0,0,0];goal.dist=950;renderIntro();}
 /* ---------- panel ---------- */
 const panel=document.getElementById('panel');
 const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=s=>esc(s).replace(/`([^`]+)`/g,'<code>$1</code>');
+function facets(x){
+  if(!x) return '';
+  return `<section class="facet"><div class="eyebrow">In depth</div><p>${fmt(x.d)}</p></section>
+    <section class="facet example"><div class="eyebrow">In practice</div><p>${fmt(x.ex)}</p></section>
+    <section class="facet analogy"><div class="eyebrow">Think of it as</div><p>${fmt(x.an)}</p></section>`;
+}
 function renderNode(n,preview){
   const C=CLUSTERS[n.cl];
   panel.innerHTML=`
@@ -852,6 +859,7 @@ function renderNode(n,preview){
     <div class="eyebrow" style="color:${C.color}"><span class="dot"></span><span style="color:var(--mist)">${C.name}</span></div>
     <h2>${esc(n.name)}</h2>
     <p class="def">${esc(n.def)}</p>
+    ${preview?'<div class="more">Click the star for an example and an analogy</div>':facets(DETAILS[n.id])}
     <div class="eyebrow">Linked to ${n.links.length}</div>
     <ul class="links">${n.links.map(e=>{const o=e.a===n?e.b:e.a;return `<li><button data-id="${o.id}"><span class="dot" style="color:${CLUSTERS[o.cl].color}"></span><span class="nm">${esc(o.name)}</span><span class="rel">${esc(e.rel)}</span></button></li>`}).join('')}</ul>`;
   const b=document.getElementById('back'); if(b) b.onclick=deselect;
