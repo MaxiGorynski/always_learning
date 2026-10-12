@@ -27,3 +27,11 @@ body{background:var(--ink);color:var(--ivory);font-family:var(--f-body);overflow
 .masthead h1 em{color:var(--halo)}
 .meta{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mist);font-variant-numeric:tabular-nums}
 
+.search{position:relative;pointer-events:auto;margin-top:10px;width:min(280px,100%)}
+.search input{width:100%;box-sizing:border-box;background:color-mix(in srgb,var(--ink-2) 85%,transparent);border:1px solid var(--line);color:var(--ivory);font:13px var(--f-mono);padding:9px 12px;border-radius:2px;outline:none;backdrop-filter:blur(6px)}
+.search input:focus-visible{border-color:var(--halo)}
+.search input::placeholder{color:var(--mist)}
+.results{position:absolute;left:0;right:0;top:100%;margin:4px 0 0;padding:4px 0;list-style:none;background:var(--ink-2);border:1px solid var(--line);z-index:5}
+.results button{all:unset;box-sizing:border-box;display:flex;gap:10px;align-items:center;width:100%;padding:7px 12px;font:13px var(--f-mono);cursor:pointer;color:var(--ivory)}
+.results button:hover,.results button:focus-visible,.results button.active{background:var(--line)}
+
