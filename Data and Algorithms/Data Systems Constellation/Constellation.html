@@ -480,3 +480,49 @@ function showTip(e,mx,my){
 }
 function hideTip(){tip.hidden=true;}
 
+/* ---------- pointer input ---------- */
+let dragging=false,moved=0,lx=0,ly=0;const pts=new Map();let pinch0=0,dist0=0;
+canvas.addEventListener('pointerdown',ev=>{
+  canvas.setPointerCapture(ev.pointerId);pts.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});lastInteract=performance.now();
+  if(pts.size===2){const [a,b]=[...pts.values()];pinch0=Math.hypot(a.x-b.x,a.y-b.y);dist0=goal.dist;}
+  dragging=true;moved=0;lx=ev.clientX;ly=ev.clientY;canvas.classList.add('dragging');
+});
+canvas.addEventListener('pointermove',ev=>{
+  const mx=ev.clientX,my=ev.clientY;
+  if(pts.has(ev.pointerId)) pts.set(ev.pointerId,{x:mx,y:my});
+  if(dragging){
+    lastInteract=performance.now();
+    if(pts.size===2){const [a,b]=[...pts.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);goal.dist=clampD(dist0*pinch0/d);moved+=5;return;}
+    const dx=mx-lx,dy=my-ly;moved+=Math.abs(dx)+Math.abs(dy);lx=mx;ly=my;
+    if(moved>4){cam.yaw+=dx*.005;cam.pitch=Math.max(-1.35,Math.min(1.35,cam.pitch+dy*.005));hideTip();hoverEdge=null;}
+    return;
+  }
+  if(ev.pointerType==='mouse') hover(mx,my);
+});
+function hover(mx,my){
+  const n=pickNode(mx,my);
+  if(n){hoverNode=n;hoverEdge=null;hideTip();canvas.className='pointing';if(!selected)renderNode(n,true);return;}
+  if(hoverNode){hoverNode=null;if(!selected)renderIntro();}
+  const e=pickEdge(mx,my,7);
+  hoverEdge=e; canvas.className=e?'pointing':'';
+  if(e) showTip(e,mx,my); else hideTip();
+}
+canvas.addEventListener('pointerup',ev=>{
+  pts.delete(ev.pointerId); if(pts.size>0) return;
+  dragging=false;canvas.classList.remove('dragging');
+  if(moved>6) return;
+  const mx=ev.clientX,my=ev.clientY;
+  const n=pickNode(mx,my);
+  if(n){select(n);hideTip();return;}
+  const e=pickEdge(mx,my,ev.pointerType==='mouse'?7:14);
+  if(e){hoverEdge=e;showTip(e,mx,my);return;}
+  hoverEdge=null;hideTip(); if(selected) deselect();
+});
+canvas.addEventListener('pointerleave',()=>{if(!dragging){hoverEdge=null;hoverNode=null;hideTip();if(!selected)renderIntro();}});
+const clampD=d=>Math.max(320,Math.min(1900,d));
+canvas.addEventListener('wheel',ev=>{ev.preventDefault();goal.dist=clampD(goal.dist*Math.exp(ev.deltaY*.0012));lastInteract=performance.now();},{passive:false});
+addEventListener('keydown',ev=>{if(ev.key==='Escape'){if(selected)deselect();clusterFocus=null;renderIntro();}});
+
+function select(n){selected=n;hoverNode=null;goal.c=[n.x,n.y,n.z];goal.dist=Math.min(goal.dist,640);renderNode(n,false);}
+function deselect(){selected=null;goal.c=[0,0,0];goal.dist=950;renderIntro();}
+
