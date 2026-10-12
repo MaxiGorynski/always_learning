@@ -356,3 +356,19 @@ clusterKeys.forEach(k=>{const c=document.createElement('canvas');c.width=c.heigh
   const gr=g.createRadialGradient(64,64,0,64,64,64);gr.addColorStop(0,'rgba(255,250,240,1)');gr.addColorStop(.12,hexA(col,1));gr.addColorStop(.3,hexA(col,.35));gr.addColorStop(1,hexA(col,0));
   g.fillStyle=gr;g.fillRect(0,0,128,128);sprites[k]=c;});
 
+/* ---------- camera ---------- */
+const canvas=document.getElementById('sky'),ctx=canvas.getContext('2d');
+let W=0,H=0,FOV=1,offX=0;
+const cam={yaw:.5,pitch:-.28,dist:950,c:[0,0,0]}, goal={dist:950,c:[0,0,0]};
+function resize(){const dpr=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;canvas.width=W*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
+  const desktop=W>820; offX=desktop?-175:0; const usableW=desktop?W-370:W, usableH=desktop?H:H*.62;
+  FOV=Math.min(usableW,usableH)*1.25; if(!desktop) offY=-H*.17; else offY=0;}
+let offY=0; addEventListener('resize',resize); resize();
+
+let cy=1,sy=0,cp=1,sp=0;
+function proj(x,y,z,noCenter){
+  if(!noCenter){x-=cam.c[0];y-=cam.c[1];z-=cam.c[2];}
+  const x1=x*cy-z*sy, z1=x*sy+z*cy, y1=y*cp-z1*sp, z2=y*sp+z1*cp, d=z2+cam.dist;
+  const s=FOV/Math.max(d,1); return {x:W/2+offX+x1*s, y:H/2+offY+y1*s, z:z2, s, ok:d>60};
+}
+
