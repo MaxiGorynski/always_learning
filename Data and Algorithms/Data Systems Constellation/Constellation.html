@@ -307,3 +307,16 @@ const EDGES = [
  ["failover","lf","Failover promotes a follower to leader."],
  ["rangepart","hashpart","Range keeps order for scans; hash spreads load evenly."],
  ["acid","dirty","Isolation, the I, is what forbids dirty reads."],
+ ["acid","norm","Normalization keeps each fact in one place, so consistency holds by construction."],
+ ["mux","lb","With multiplexed HTTP/2, a connection-level balancer pins all traffic to one backend; balance per request."],
+ ["schema","es","Old events never change, so consumers must read every historical schema version."],
+ ["schema","logrep","Logical replication carries rows, so schema changes must stay compatible on both sides."],
+ ["schema","dw","Unplanned upstream schema changes break warehouse pipelines."],
+ ["dskew","rebalance","Rebalancing evens out partitions that grew unevenly."],
+ ["ha","geo","Replicating across regions survives losing a whole data centre."],
+ ["compaction","es","Log compaction keeps only the latest event per key, trading history for size."],
+ ["ratelimit","retrystorm","Rate limits cap the damage of a retry storm."],
+ ["physrep","logrep","Physical copies bytes (exact clone); logical copies row changes (selective, cross-version)."],
+ ["wamp","checkpoint","After each checkpoint, Postgres logs full-page images, amplifying writes."]
+];
+/*END*/
