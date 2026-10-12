@@ -59,3 +59,8 @@ body{background:var(--ink);color:var(--ivory);font-family:var(--f-body);overflow
 .hint{font-family:var(--f-mono);font-size:11px;color:var(--mist);line-height:1.7;border-top:1px solid var(--line);padding-top:14px}
 .hint kbd{font:inherit;color:var(--ivory)}
 
+#tip{position:fixed;left:0;top:0;max-width:280px;pointer-events:none;background:var(--ink-2);border:1px solid var(--halo);padding:11px 13px 12px;display:grid;gap:6px;box-shadow:0 10px 40px rgba(0,0,0,.5);z-index:10}
+#tip .pair{font:500 11.5px var(--f-mono);letter-spacing:.02em;display:flex;flex-wrap:wrap;gap:4px 7px;align-items:center}
+#tip .pair i{font-style:normal;color:var(--mist)}
+#tip p{margin:0;font-size:13px;line-height:1.5;color:var(--ivory)}
+
