@@ -176,3 +176,13 @@ const NODES = [
  ["mux","Connection Multiplexing","traffic","Many logical streams share one physical connection."],
  ["leaks","Database Connection Leaks","traffic","Connections borrowed and never returned, until the pool runs dry."],
 
+ ["norm","Normalization","model","Store each fact exactly once; no redundancy."],
+ ["denorm","Denormalization","model","Duplicate data to avoid joins: faster reads, harder writes."],
+ ["mview","Materialized Views","model","Precomputed query results stored as a table and refreshed."],
+ ["readmodel","Denormalized Read Models","model","Query-shaped projections built from the write side (CQRS)."],
+ ["es","Event Sourcing","model","State is an immutable log of events; current state is a replay."],
+ ["schema","Schema Evolution","model","Changing schemas while old and new readers and writers keep working."],
+ ["dw","Data Warehouse","model","Central store built for large analytical queries."],
+ ["planner","Query Planner","model","Turns SQL into an execution plan: indexes, join order, algorithms."],
+ ["cbo","Cost-Based Query Optimization","model","Estimates each candidate plan’s cost from statistics; picks the cheapest."]
+];
