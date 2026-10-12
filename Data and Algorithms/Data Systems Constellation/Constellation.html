@@ -453,3 +453,19 @@ function frame(now){
 }
 requestAnimationFrame(frame);
 
+/* ---------- picking ---------- */
+function pickNode(mx,my){
+  let best=null,bd=1e9;
+  for(const n of nodes){const p=P[n.i];if(!p||!p.ok)continue;const r=Math.max(7,(2.6+n.links.length*.75)*p.s*1.8);const d=Math.hypot(p.x-mx,p.y-my);
+    if(d<r && (d<bd || (best && p.z<P[best.i].z-30))){best=n;bd=d;}}
+  return best;
+}
+function pickEdge(mx,my,th){
+  let best=null,bd=th;
+  for(const e of edges){const a=P[e.a.i],b=P[e.b.i];if(!a||!b||!a.ok||!b.ok)continue;
+    const F=focusSet(); if(selected && !(e.a===selected||e.b===selected)) continue;
+    const vx=b.x-a.x,vy=b.y-a.y,L=vx*vx+vy*vy||1;let t=((mx-a.x)*vx+(my-a.y)*vy)/L;t=Math.max(0,Math.min(1,t));
+    const d=Math.hypot(a.x+vx*t-mx,a.y+vy*t-my); if(d<bd){bd=d;best=e;}}
+  return best;
+}
+
