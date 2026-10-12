@@ -86,3 +86,12 @@ Bitesized definitions for the 80 concepts in `Constellation.html`, grouped by re
 - **Connection Leaks**: Connections borrowed and never returned until the pool runs dry.
 
 ## Modeling & querying
+- **Normalization**: Each fact stored once; no redundancy.
+- **Denormalization**: Duplicate data to avoid joins; faster reads, harder writes.
+- **Materialized Views**: Precomputed query results stored as a table.
+- **Denormalized Read Models**: Query-shaped projections built from the write side (CQRS).
+- **Event Sourcing**: State is an immutable log of events; current state is a replay.
+- **Schema Evolution**: Changing schemas while old and new readers and writers keep working.
+- **Data Warehouse**: Central store built for big analytical queries.
+- **Query Planner**: Turns SQL into an execution plan.
+- **Cost-Based Optimization**: Estimates each candidate plan's cost from statistics; picks the cheapest.
