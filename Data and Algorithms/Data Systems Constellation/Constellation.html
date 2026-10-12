@@ -61,7 +61,7 @@ body{background:var(--ink);color:var(--ivory);font-family:var(--f-body);overflow
 .facet.example p{font-size:13px;color:var(--ivory);background:color-mix(in srgb,var(--ink) 70%,transparent);border:1px solid var(--line);padding:11px 13px}
 .facet.example code{font-family:var(--f-mono);font-size:12px;color:var(--halo)}
 .facet.analogy p{font-family:var(--f-display);font-style:italic;font-size:19px;line-height:1.35;color:var(--halo)}
-.facet.why p+p{margin-top:2px}
+.facet.why p{padding-left:12px;border-left:1px solid var(--line);color:var(--ivory)}
 .more{font-family:var(--f-mono);font-size:11px;color:var(--mist);letter-spacing:.04em}
 .members{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0;padding:0}
 .members button{all:unset;cursor:pointer;font:12px var(--f-mono);padding:5px 9px;border:1px solid var(--line);color:var(--ivory)}
@@ -806,7 +806,7 @@ canvas.addEventListener('pointermove',ev=>{
 function hover(mx,my){
   const n=pickNode(mx,my);
   if(n){hoverNode=n;hoverEdge=null;hideTip();canvas.className='pointing';if(!selected)renderNode(n,true);return;}
-  if(hoverNode){hoverNode=null;if(!selected)renderIntro();}
+  if(hoverNode){hoverNode=null;if(!selected)renderHome();}
   const e=pickEdge(mx,my,7);
   hoverEdge=e; canvas.className=e?'pointing':'';
   if(e) showTip(e,mx,my); else hideTip();
@@ -822,7 +822,7 @@ canvas.addEventListener('pointerup',ev=>{
   if(e){hoverEdge=e;showTip(e,mx,my);return;}
   hoverEdge=null;hideTip(); if(selected) deselect();
 });
-canvas.addEventListener('pointerleave',()=>{if(!dragging){hoverEdge=null;hoverNode=null;hideTip();if(!selected)renderIntro();}});
+canvas.addEventListener('pointerleave',()=>{if(!dragging){hoverEdge=null;hoverNode=null;hideTip();if(!selected)renderHome();}});
 const clampD=d=>Math.max(240,Math.min(2400,d));
 function zoomBy(f){goal.dist=clampD(goal.dist*f);lastInteract=performance.now();}
 canvas.addEventListener('wheel',ev=>{ev.preventDefault();
@@ -830,7 +830,7 @@ canvas.addEventListener('wheel',ev=>{ev.preventDefault();
   zoomBy(Math.exp(Math.max(-1,Math.min(1,dy*.004))));},{passive:false});
 canvas.addEventListener('dblclick',ev=>{if(!pickNode(ev.clientX,ev.clientY)) zoomBy(.6);});
 addEventListener('keydown',ev=>{
-  if(ev.key==='Escape'){if(selected)deselect();clusterFocus=null;renderIntro();}
+  if(ev.key==='Escape'){clusterFocus=null;deselect();}
   if(ev.target.tagName==='INPUT') return;
   if(ev.key==='+'||ev.key==='=') zoomBy(.7);
   else if(ev.key==='-'||ev.key==='_') zoomBy(1/.7);
@@ -840,7 +840,16 @@ document.getElementById('zout').onclick=()=>zoomBy(1/.7);
 document.getElementById('zreset').onclick=()=>{clusterFocus=null;deselect();};
 
 function select(n){selected=n;hoverNode=null;goal.c=[n.x,n.y,n.z];goal.dist=Math.min(goal.dist,640);renderNode(n,false);}
-function deselect(){selected=null;goal.c=[0,0,0];goal.dist=950;renderIntro();}
+function deselect(){selected=null;if(clusterFocus){selectRegion(clusterFocus);return;}goal.c=[0,0,0];goal.dist=950;renderIntro();}
+function selectRegion(k){
+  clusterFocus=k;selected=null;hoverNode=null;
+  const m=nodes.filter(n=>n.cl===k), c=[0,0,0];
+  m.forEach(n=>{c[0]+=n.x/m.length;c[1]+=n.y/m.length;c[2]+=n.z/m.length;});
+  const spread=Math.max(...m.map(n=>Math.hypot(n.x-c[0],n.y-c[1],n.z-c[2])));
+  goal.c=c;goal.dist=clampD(spread*3.2+260);lastInteract=performance.now();
+  renderRegion(k);
+}
+const renderHome=()=>clusterFocus?renderRegion(clusterFocus):renderIntro();
 
 /* ---------- panel ---------- */
 const panel=document.getElementById('panel');
@@ -855,7 +864,7 @@ function facets(x){
 function renderNode(n,preview){
   const C=CLUSTERS[n.cl];
   panel.innerHTML=`
-    ${preview?'':'<button class="close" id="back">← All concepts</button>'}
+    ${preview?'':`<button class="close" id="back">← ${clusterFocus?esc(CLUSTERS[clusterFocus].name):'All concepts'}</button>`}
     <div class="eyebrow" style="color:${C.color}"><span class="dot"></span><span style="color:var(--mist)">${C.name}</span></div>
     <h2>${esc(n.name)}</h2>
     <p class="def">${esc(n.def)}</p>
@@ -873,8 +882,24 @@ function renderIntro(){
     <p class="intro">Each star is a concept; each line is a relationship. <b>Hover a line</b> to read how two concepts connect. <b>Click a star</b> to fly to it and see its definition and links.</p>
     <div class="eyebrow">Regions</div>
     <ul class="legend">${clusterKeys.map(k=>`<li><button data-cl="${k}" aria-pressed="${clusterFocus===k}"><span class="dot" style="color:${CLUSTERS[k].color}"></span>${CLUSTERS[k].name}<span class="ct">${counts[k]}</span></button></li>`).join('')}</ul>
-    <div class="hint"><kbd>Drag</kbd> to orbit · <kbd>Scroll</kbd> to zoom<br><kbd>Esc</kbd> to return · regions filter on click</div>`;
-  panel.querySelectorAll('.legend button').forEach(btn=>btn.onclick=()=>{clusterFocus=clusterFocus===btn.dataset.cl?null:btn.dataset.cl;renderIntro();});
+    <div class="hint"><kbd>Drag</kbd> to orbit · <kbd>Scroll</kbd>, <kbd>+</kbd>/<kbd>−</kbd> or double-click to zoom<br>Click a region to fly to it · <kbd>Esc</kbd> to return</div>`;
+  panel.querySelectorAll('.legend button').forEach(btn=>btn.onclick=()=>selectRegion(btn.dataset.cl));
+}
+function renderRegion(k){
+  const C=CLUSTERS[k], R=REGIONS[k], m=nodes.filter(n=>n.cl===k).sort((a,b)=>b.links.length-a.links.length);
+  const inside=edges.filter(e=>e.a.cl===k&&e.b.cl===k).length, out=edges.filter(e=>(e.a.cl===k)!==(e.b.cl===k)).length;
+  panel.innerHTML=`
+    <button class="close" id="back">← All regions</button>
+    <div class="eyebrow" style="color:${C.color}"><span class="dot"></span><span style="color:var(--mist)">Region · ${m.length} concepts</span></div>
+    <h2>${esc(C.name)}</h2>
+    <p class="def">${esc(R.about)}</p>
+    <section class="facet why"><div class="eyebrow">Why it matters at work</div>${R.why.map(w=>`<p>${esc(w)}</p>`).join('')}</section>
+    <div class="eyebrow">Concepts</div>
+    <ul class="members">${m.map(n=>`<li><button data-id="${n.id}">${esc(n.name)}</button></li>`).join('')}</ul>
+    <div class="more">${inside} links inside this region · ${out} reach into others</div>`;
+  document.getElementById('back').onclick=()=>{clusterFocus=null;deselect();};
+  panel.querySelectorAll('.members button').forEach(btn=>btn.onclick=()=>select(byId[btn.dataset.id]));
+  panel.parentElement.scrollTop=0; panel.scrollTop=0;
 }
 renderIntro();
 
