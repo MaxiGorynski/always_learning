@@ -469,3 +469,14 @@ function pickEdge(mx,my,th){
   return best;
 }
 
+/* ---------- tooltip ---------- */
+const tip=document.getElementById('tip');
+function showTip(e,mx,my){
+  const ca=CLUSTERS[e.a.cl].color, cb=CLUSTERS[e.b.cl].color;
+  tip.innerHTML=`<div class="pair"><span style="color:${ca}">${e.a.name}</span><i>↔</i><span style="color:${cb}">${e.b.name}</span></div><p>${e.rel}</p>`;
+  tip.hidden=false; const w=tip.offsetWidth,h=tip.offsetHeight;
+  let x=mx+16,y=my+16; if(x+w>W-12)x=mx-w-16; if(y+h>H-12)y=my-h-16; x=Math.max(12,x);y=Math.max(12,y);
+  tip.style.transform=`translate(${x}px,${y}px)`;
+}
+function hideTip(){tip.hidden=true;}
+
