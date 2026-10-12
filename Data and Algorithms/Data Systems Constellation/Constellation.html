@@ -138,3 +138,18 @@ const NODES = [
  ["idem","Idempotency","consensus","Doing it twice has the same effect as doing it once. Makes retries safe."],
  ["eos","Exactly-Once Semantics","consensus","Each message takes effect once; really at-least-once delivery plus deduplication."],
 
+ ["cap","CAP Theorem","repl","During a network partition, choose consistency or availability."],
+ ["strong","Strong Consistency","repl","Every read sees the latest committed write (linearizability)."],
+ ["eventual","Eventual Consistency","repl","Replicas converge once writes stop; reads may be stale until then."],
+ ["creads","Consistent Reads","repl","Reads with a stated guarantee: read-your-writes, monotonic, or from the leader."],
+ ["lf","Leader–Follower Replication","repl","One leader takes writes; followers replay its log."],
+ ["ml","Multi-Leader Replication","repl","Several nodes accept writes and replicate to each other; conflicts must be resolved."],
+ ["replicas","Read Replicas","repl","Followers that serve read-only traffic, offloading the primary."],
+ ["physrep","Physical Replication","repl","Ships byte-level page changes: an exact clone on the same version."],
+ ["logrep","Logical Replication","repl","Ships row-level changes: selective, and works across versions."],
+ ["geo","Geo-Replication","repl","Copies data across regions for local latency and disaster survival."],
+ ["rrepair","Read Repair","repl","On read, spot stale replicas and write the newest value back."],
+ ["cdc","Change Data Capture","repl","Streams row changes out of the database log to other systems."],
+ ["failover","Failover","repl","Promote a standby when the primary dies."],
+ ["ha","High Availability","repl","Redundancy plus automatic recovery to minimise downtime, measured in nines."],
+
