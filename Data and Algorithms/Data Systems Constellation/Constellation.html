@@ -349,3 +349,10 @@ for(let it=0;it<420;it++){
 /* ---------- starfield ---------- */
 const stars=[];for(let i=0;i<520;i++){const u=rnd()*2-1,t=rnd()*Math.PI*2,r=Math.sqrt(1-u*u),D=2200+rnd()*1400;stars.push({x:Math.cos(t)*r*D,y:u*D,z:Math.sin(t)*r*D,b:rnd()});}
 
+/* ---------- glow sprites per cluster ---------- */
+const sprites={};
+function hexA(h,a){const n=parseInt(h.slice(1),16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;}
+clusterKeys.forEach(k=>{const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');const col=CLUSTERS[k].color;
+  const gr=g.createRadialGradient(64,64,0,64,64,64);gr.addColorStop(0,'rgba(255,250,240,1)');gr.addColorStop(.12,hexA(col,1));gr.addColorStop(.3,hexA(col,.35));gr.addColorStop(1,hexA(col,0));
+  g.fillStyle=gr;g.fillRect(0,0,128,128);sprites[k]=c;});
+
