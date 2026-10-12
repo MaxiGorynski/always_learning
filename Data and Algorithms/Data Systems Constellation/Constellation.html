@@ -153,3 +153,15 @@ const NODES = [
  ["failover","Failover","repl","Promote a standby when the primary dies."],
  ["ha","High Availability","repl","Redundancy plus automatic recovery to minimise downtime, measured in nines."],
 
+ ["hscale","Horizontal Scaling","part","Add more machines instead of bigger ones."],
+ ["sharding","Database Sharding","part","Split a dataset across databases by a shard key."],
+ ["hashpart","Hash Partitioning","part","Assign keys by hash: even spread, no range scans."],
+ ["rangepart","Range Partitioning","part","Assign contiguous key ranges: fast range scans, hotspot risk."],
+ ["chash","Consistent Hashing","part","Keys and nodes on a ring; a membership change moves only ~1/n of keys."],
+ ["hot","Hot Partition","part","One partition receives a disproportionate share of traffic."],
+ ["dskew","Data Skew","part","Data unevenly distributed across keys or partitions."],
+ ["reshard","Resharding","part","Changing shard count or boundaries while the system stays live."],
+ ["rebalance","Rebalancing","part","Moving partitions between nodes to even out load."],
+ ["federation","Federation","part","Split databases by function: users DB, orders DB, billing DB."],
+ ["locality","Data Locality","part","Keep related data together, and computation near the data."],
+
