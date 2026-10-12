@@ -64,7 +64,15 @@ body{background:var(--ink);color:var(--ivory);font-family:var(--f-body);overflow
 #tip .pair i{font-style:normal;color:var(--mist)}
 #tip p{margin:0;font-size:13px;line-height:1.5;color:var(--ivory)}
 
+.zoom{position:fixed;left:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);display:flex;border:1px solid var(--line);background:color-mix(in srgb,var(--ink-2) 88%,transparent);backdrop-filter:blur(6px)}
+.zoom button{all:unset;box-sizing:border-box;min-width:40px;height:40px;padding:0 12px;display:grid;place-items:center;cursor:pointer;font:15px var(--f-mono);color:var(--ivory)}
+.zoom button+button{border-left:1px solid var(--line)}
+.zoom button#zreset{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mist)}
+.zoom button:hover,.zoom button:focus-visible{background:var(--line);color:var(--halo)}
+
 @media (max-width:820px){
+  .zoom{left:auto;right:16px;bottom:auto;top:calc(env(safe-area-inset-top,0px) + 16px)}
+  .zoom #zreset{display:none}
   .panel{top:auto;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);width:auto;max-height:42%}
   .panel-scroll{padding:16px 18px 20px;gap:14px}
   .panel h2{font-size:26px}
@@ -85,6 +93,11 @@ body{background:var(--ink);color:var(--ivory);font-family:var(--f-body);overflow
 </header>
 
 <aside class="panel" aria-live="polite"><div class="panel-scroll" id="panel"></div></aside>
+<div class="zoom" role="group" aria-label="Zoom">
+  <button id="zin" aria-label="Zoom in">+</button>
+  <button id="zout" aria-label="Zoom out">−</button>
+  <button id="zreset">Reset view</button>
+</div>
 <div id="tip" hidden></div>
 
 <script>
@@ -525,7 +538,14 @@ canvas.addEventListener('wheel',ev=>{ev.preventDefault();
   const dy=ev.deltaMode===1?ev.deltaY*33:ev.deltaY; // lines → pixels
   zoomBy(Math.exp(Math.max(-1,Math.min(1,dy*.004))));},{passive:false});
 canvas.addEventListener('dblclick',ev=>{if(!pickNode(ev.clientX,ev.clientY)) zoomBy(.6);});
-addEventListener('keydown',ev=>{if(ev.key==='Escape'){if(selected)deselect();clusterFocus=null;renderIntro();}});
+addEventListener('keydown',ev=>{
+  if(ev.key==='Escape'){if(selected)deselect();clusterFocus=null;renderIntro();}
+  if(ev.target.tagName==='INPUT') return;
+  if(ev.key==='+'||ev.key==='=') zoomBy(.7);
+  else if(ev.key==='-'||ev.key==='_') zoomBy(1/.7);
+});
+document.getElementById('zin').onclick=()=>zoomBy(.7);
+document.getElementById('zout').onclick=()=>zoomBy(1/.7);
 
 function select(n){selected=n;hoverNode=null;goal.c=[n.x,n.y,n.z];goal.dist=Math.min(goal.dist,640);renderNode(n,false);}
 function deselect(){selected=null;goal.c=[0,0,0];goal.dist=950;renderIntro();}
