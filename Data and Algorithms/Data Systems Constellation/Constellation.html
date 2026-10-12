@@ -186,3 +186,14 @@ const NODES = [
  ["planner","Query Planner","model","Turns SQL into an execution plan: indexes, join order, algorithms."],
  ["cbo","Cost-Based Query Optimization","model","Estimates each candidate plan’s cost from statistics; picks the cheapest."]
 ];
+const EDGES = [
+ ["chash","hashpart","Consistent hashing is a hash-partitioning scheme that doesn’t remap every key when nodes change."],
+ ["chash","rebalance","Makes rebalancing cheap: a new node takes only ~1/n of the keys."],
+ ["chash","cache","Distributed caches use the ring so losing one node only empties its share."],
+ ["chash","reshard","Shrinks how much data must move when shard count changes."],
+ ["wskew","si","Snapshot isolation allows write skew: both read one snapshot, then write different rows."],
+ ["wskew","serial","Only serializable isolation (e.g. SSI) reliably prevents write skew."],
+ ["wskew","phantom","Write skew often rides on a phantom: checking rows are absent, then another txn inserts them."],
+ ["wskew","pesslock","SELECT … FOR UPDATE locks the rows read, closing the write-skew gap."],
+ ["sharding","hscale","Sharding is how a database scales writes horizontally."],
+ ["sharding","hashpart","A common way to map keys to shards."],
