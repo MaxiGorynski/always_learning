@@ -36,7 +36,7 @@ body{background:var(--ink);color:var(--ivory);font-family:var(--f-body);overflow
 .results button:hover,.results button:focus-visible,.results button.active{background:var(--line)}
 
 .panel{position:fixed;top:calc(env(safe-area-inset-top,0px) + 20px);right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);width:370px;display:flex;flex-direction:column;background:color-mix(in srgb,var(--ink-2) 88%,transparent);border:1px solid var(--line);backdrop-filter:blur(10px);overflow:hidden}
-.panel-scroll{overflow-y:auto;padding:22px 22px 26px;display:grid;gap:18px;align-content:start}
+.panel-scroll{flex:1;min-height:0;overflow-y:auto;padding:22px 22px 26px;display:grid;gap:18px;align-content:start}
 .eyebrow{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mist);display:flex;align-items:center;gap:8px}
 .dot{width:8px;height:8px;border-radius:50%;flex:none;box-shadow:0 0 10px currentColor;background:currentColor}
 .panel h2{margin:0;font-family:var(--f-display);font-weight:400;font-size:32px;line-height:1.05;text-wrap:balance}
@@ -978,4 +978,116 @@ const store={mode:'local',db:null,uid:null,chain:{},
       this.local(k,body);};
     return this.chain[k]=(this.chain[k]||Promise.resolve()).then(run,run);}  // one write at a time per doc
 };
+
+/* ---------- card conversations with Claude ---------- */
+// key: "n-<nodeId>" for a concept card, "r-<regionKey>" for a region card
+let sample=null, chatKey=null;
+const chats={}, pending={}, drafts={};
+let chatIndex={};  // key -> {n, last}: which cards have conversations
+store.get('index').then(v=>{chatIndex=(v&&v.chats)||{};if(!selected&&!clusterFocus&&!hoverNode)renderIntro();});
+window.claude?.use?.('sample').then(s=>{sample=s;syncComposer();}).catch(()=>{});
+
+const TUTOR=`You are a patient tutor helping a software engineer learn data-systems concepts, in the clear, problem-first teaching style of Hello Interview. The learner is reading the card below and asking you about it. Explain plainly, define any jargon you use, prefer concrete examples, and connect to related concepts when it helps. Keep answers focused, usually under 200 words unless they ask for more depth. Write short paragraphs; you may use **bold**, \`code\` and "- " bullet lists, and no other formatting. If they ask you to quiz them, ask one question at a time and wait for their answer.\n\n`;
+function cardContext(key){
+  const [t,id]=[key[0],key.slice(2)];
+  if(t==='n'){const n=byId[id],x=DETAILS[id];
+    return `CARD: concept\nName: ${n.name}\nRegion: ${CLUSTERS[n.cl].name}\nSummary: ${n.def}\nIn depth: ${x.d}\nIn practice: ${x.ex}\nAnalogy: ${x.an}\nRelated concepts:\n`+n.links.map(e=>`- ${(e.a===n?e.b:e.a).name}: ${e.rel}`).join('\n');}
+  const C=CLUSTERS[id],R=REGIONS[id];
+  return `CARD: region\nName: ${C.name}\nAbout: ${R.about}\nWhy it matters at work:\n`+R.why.map(w=>'- '+w).join('\n')+'\nConcepts in this region:\n'+nodes.filter(n=>n.cl===id).map(n=>`- ${n.name}: ${n.def}`).join('\n');
+}
+function cardName(key){return key[0]==='n'?byId[key.slice(2)].name:CLUSTERS[key.slice(2)].name;}
+const inlineMd=s=>s.replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');
+function md(t){
+  let html='',list=false;
+  for(const line of esc(t).split('\n')){
+    const m=line.match(/^\s*[-*•] +(.*)/);
+    if(m){if(!list){html+='<ul>';list=true;}html+='<li>'+inlineMd(m[1])+'</li>';continue;}
+    if(list){html+='</ul>';list=false;}
+    if(line.trim()) html+='<p>'+inlineMd(line.replace(/^#+\s*/,''))+'</p>';
+  }
+  return html+(list?'</ul>':'');
+}
+const dayFmt=new Intl.DateTimeFormat(undefined,{day:'numeric',month:'short',year:'numeric'});
+const timeFmt=new Intl.DateTimeFormat(undefined,{hour:'2-digit',minute:'2-digit'});
+async function loadChat(key){
+  if(!chats[key]){const v=await store.get('chat-'+key);chats[key]=chats[key]||{turns:(v&&Array.isArray(v.turns))?v.turns:[]};}
+  return chats[key];
+}
+function saveChat(key){
+  const c=chats[key];
+  while(c.turns.length>2&&JSON.stringify(c).length>200000) c.turns.splice(0,2); // stay well under the 256 KiB doc cap
+  store.set('chat-'+key,{turns:c.turns});
+  chatIndex[key]={n:c.turns.filter(t=>t.role==='user').length,last:Date.now()};
+  store.set('index',{chats:chatIndex});
+}
+const STARTERS=['Explain it like I’m new to this','Give me another real-world example','How does this come up in a system design interview?','What mistakes do engineers make with this?','Quiz me on this'];
+function renderChat(){
+  const el=document.getElementById('chat'); if(!el||!chatKey) return;
+  const key=chatKey,c=chats[key];
+  if(!c){el.innerHTML='<div class="eyebrow">Your conversation</div><p class="empty-chat">Loading your history…</p>';return;}
+  const p=pending[key];
+  let html=`<div class="eyebrow">Your conversation${c.turns.length?` · ${c.turns.filter(t=>t.role==='user').length} questions`:''}</div>`;
+  if(!c.turns.length&&!p){
+    html+=`<p class="empty-chat">Ask Claude anything about ${esc(cardName(key))}. Your questions and its answers stay on this card, dated, so you can come back and see how your understanding has grown.</p>`;
+    if(sample) html+=`<ul class="starters">${STARTERS.map(s=>`<li><button type="button" data-q="${esc(s)}">${esc(s)}</button></li>`).join('')}</ul>`;
+  }
+  let lastDay='';
+  for(const t of c.turns){
+    const day=dayFmt.format(t.at||Date.now());
+    if(day!==lastDay){html+=`<div class="day">${day}</div>`;lastDay=day;}
+    html+=t.role==='user'
+      ?`<div class="msg you"><div class="who">You · ${timeFmt.format(t.at||Date.now())}</div><div class="body">${esc(t.content)}</div></div>`
+      :`<div class="msg"><div class="who">Claude</div><div class="body">${md(t.content)}</div></div>`;
+  }
+  if(p) html+=`<div class="msg"><div class="who">Claude</div><div class="body" id="pendingBody">${p.text?md(p.text):'<span class="thinking">Thinking…</span>'}</div></div>`;
+  el.innerHTML=html;
+  el.querySelectorAll('.starters button').forEach(b=>b.onclick=()=>ask(key,b.dataset.q));
+}
+function scrollPanelEnd(){panel.scrollTop=panel.scrollHeight;}
+const composer=document.getElementById('composer'),askBox=document.getElementById('askBox'),askBtn=document.getElementById('askBtn'),stopBtn=document.getElementById('stopBtn'),askStatus=document.getElementById('askStatus');
+function syncComposer(){
+  composer.hidden=!chatKey||!sample;
+  if(!chatKey) return;
+  const busy=!!pending[chatKey];
+  askBtn.disabled=busy; stopBtn.hidden=!busy;
+  askBox.placeholder=`Ask about ${cardName(chatKey)}…`;
+  if(!askStatus.dataset.err) askStatus.textContent=busy?'Claude is answering…':(store.mode==='cloud'?'Saved privately to your account':'Saved in this browser');
+  renderChat();
+}
+// Mount the conversation for a card (or null to hide it). Called by the panel renderers.
+function mountChat(key){
+  if(chatKey&&chatKey!==key) drafts[chatKey]=askBox.value;
+  chatKey=key; askStatus.textContent=''; delete askStatus.dataset.err;
+  if(key){askBox.value=drafts[key]||''; if(!chats[key]) loadChat(key).then(()=>{if(chatKey===key)renderChat();});}
+  syncComposer();
+}
+const ERR={not_granted:'Claude wasn’t allowed for this page.',sampling_disabled:'Claude isn’t available on this account.',rate_limited:'Too many questions at once. Try again in a moment.',session_expired:'Sign in again to keep asking.',refused:'Claude declined that question. Try rephrasing it.',prompt_too_large:'This conversation is too long to send. Older turns will be trimmed next time.',empty_completion:'Claude returned nothing. Try rephrasing.',upstream_error:'The connection dropped. Ask again.'};
+async function ask(key,question){
+  question=question.trim(); if(!question||!sample||pending[key]) return;
+  const c=await loadChat(key);
+  const history=c.turns.slice(-30).map(t=>({role:t.role,content:t.content}));
+  c.turns.push({role:'user',content:question,at:Date.now()}); saveChat(key);
+  const ctl=new AbortController(); pending[key]={text:'',ctl};
+  if(chatKey===key){askBox.value='';drafts[key]='';askStatus.textContent='';delete askStatus.dataset.err;syncComposer();scrollPanelEnd();}
+  const input=[{role:'user',content:TUTOR+cardContext(key)},...history,{role:'user',content:question}];
+  try{
+    const r=await sample(input,{cache:false,signal:ctl.signal,onText:({text})=>{
+      pending[key].text=text;
+      const b=chatKey===key&&document.getElementById('pendingBody');
+      if(b){const near=panel.scrollHeight-panel.scrollTop-panel.clientHeight<80;b.innerHTML=md(text);if(near)scrollPanelEnd();}
+    }});
+    c.turns.push({role:'assistant',content:r.text+(r.truncated?'\n\n(Answer cut short. Ask for the rest.)':''),at:Date.now()});
+  }catch(e){
+    if(e&&e.text) c.turns.push({role:'assistant',content:e.text+'\n\n(Interrupted.)',at:Date.now()});
+    if(e&&(e.code==='not_granted'||e.code==='sampling_disabled')) sample=null;
+    if(e&&e.code!=='cancelled'&&chatKey===key){askStatus.textContent=ERR[e.code]||ERR.upstream_error;askStatus.dataset.err='1';}
+  }finally{
+    delete pending[key]; saveChat(key);
+    if(chatKey===key){syncComposer();scrollPanelEnd();}
+  }
+}
+composer.addEventListener('submit',ev=>{ev.preventDefault();if(chatKey)ask(chatKey,askBox.value);});
+askBox.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();composer.requestSubmit();}});
+askBox.addEventListener('input',()=>{askBox.style.height='auto';askBox.style.height=Math.min(140,askBox.scrollHeight)+'px';});
+stopBtn.onclick=()=>{if(chatKey&&pending[chatKey])pending[chatKey].ctl.abort();};
 </script>
