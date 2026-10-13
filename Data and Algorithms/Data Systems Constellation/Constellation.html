@@ -12,6 +12,8 @@
   --ivory:#ece6d8;        /* primary text */
   --mist:#9198ad;         /* secondary text */
   --halo:#f4dfa8;         /* focus accent */
+  --good:#8fd6a0;         /* quiz: correct */
+  --bad:#f28b7d;          /* quiz: incorrect */
   --f-display:"Instrument Serif", "Iowan Old Style", Georgia, serif;
   --f-body:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-mono:"IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -93,6 +95,57 @@ body{background:var(--ink);color:var(--ivory);font-family:var(--f-body);overflow
 .composer button:disabled{opacity:.4;cursor:default}
 .composer button.stop{background:transparent;color:var(--ivory);outline:1px solid var(--line)}
 .composer button:focus-visible{outline:2px solid var(--ivory);outline-offset:2px}
+.quiz-open{all:unset;box-sizing:border-box;pointer-events:auto;cursor:pointer;margin-top:8px;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--halo);color:var(--halo);font:500 11px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;background:color-mix(in srgb,var(--ink-2) 85%,transparent)}
+.quiz-open:hover,.quiz-open:focus-visible{background:var(--halo);color:var(--ink)}
+.quiz{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:16px;background:color-mix(in srgb,var(--ink) 72%,transparent);backdrop-filter:blur(6px)}
+.quiz-card{width:min(600px,100%);max-height:calc(100% - 8px);overflow-y:auto;box-sizing:border-box;background:var(--ink-2);border:1px solid var(--line);padding:24px 26px 26px;display:grid;gap:18px;align-content:start;box-shadow:0 20px 80px rgba(0,0,0,.55)}
+.quiz-head{display:flex;align-items:baseline;gap:12px}
+.quiz-head h2{margin:0;font-family:var(--f-display);font-weight:400;font-size:30px;line-height:1}
+.quiz-head .x{all:unset;cursor:pointer;margin-left:auto;font:11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mist)}
+.quiz-head .x:hover,.quiz-head .x:focus-visible{color:var(--halo)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:7px;font:12px var(--f-mono);padding:6px 10px;border:1px solid var(--line);color:var(--ivory)}
+.chips button[aria-pressed="true"]{border-color:var(--halo);background:color-mix(in srgb,var(--halo) 12%,transparent);color:var(--halo)}
+.chips button:hover,.chips button:focus-visible{border-color:var(--halo)}
+.chips .dot{width:6px;height:6px}
+.go{all:unset;cursor:pointer;justify-self:start;padding:11px 20px;background:var(--halo);color:var(--ink);font:500 12px var(--f-mono);letter-spacing:.12em;text-transform:uppercase}
+.go:focus-visible{outline:2px solid var(--ivory);outline-offset:2px}
+.qmeta{display:flex;justify-content:space-between;gap:10px;font:11px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mist);font-variant-numeric:tabular-nums}
+.qbar{height:2px;background:var(--line)}.qbar i{display:block;height:100%;background:var(--halo);transition:width .3s}
+.qkind{font:11px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mist)}
+.qtext{margin:0;font-size:16px;line-height:1.6;color:var(--ivory)}
+.qtext.analogy{font-family:var(--f-display);font-style:italic;font-size:22px;line-height:1.35;color:var(--halo)}
+.qtext mark{background:none;color:var(--halo);font-family:var(--f-mono);font-size:.85em;letter-spacing:.05em}
+.opts{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.opts button{all:unset;box-sizing:border-box;cursor:pointer;width:100%;display:flex;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--line);font:13.5px var(--f-body);color:var(--ivory)}
+.opts button .k{font:11px var(--f-mono);color:var(--mist);width:14px}
+.opts button:hover:not(:disabled),.opts button:focus-visible{border-color:var(--halo)}
+.opts button:disabled{cursor:default}
+.opts button.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 14%,transparent)}
+.opts button.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,transparent)}
+.verdict{display:grid;gap:6px;padding:12px 14px;border-left:2px solid var(--good)}
+.verdict.miss{border-left-color:var(--bad)}
+.verdict b{font:500 11px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--good)}
+.verdict.miss b{color:var(--bad)}
+.verdict p{margin:0;font-size:13.5px;line-height:1.55;color:var(--ivory)}
+.qactions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.ghost{all:unset;cursor:pointer;font:500 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mist);padding:8px 0}
+.ghost:hover,.ghost:focus-visible{color:var(--halo)}
+.big{font-family:var(--f-display);font-size:64px;line-height:1;color:var(--halo);font-variant-numeric:tabular-nums}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.stats div{background:var(--ink-2);padding:10px 12px;display:grid;gap:2px}
+.stats b{font-family:var(--f-display);font-weight:400;font-size:26px;font-variant-numeric:tabular-nums}
+.stats span{font:10px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mist)}
+.mastery{list-style:none;margin:0;padding:0;display:grid;gap:7px}
+.mastery li{display:grid;grid-template-columns:minmax(0,1fr) 110px 44px;gap:10px;align-items:center;font:12px var(--f-mono);color:var(--ivory)}
+.mastery .track{height:6px;background:var(--line)}.mastery .track i{display:block;height:100%}
+.mastery .pc{text-align:right;color:var(--mist);font-variant-numeric:tabular-nums}
+.history{display:flex;align-items:flex-end;gap:4px;height:56px;border-bottom:1px solid var(--line)}
+.history i{flex:1;max-width:22px;background:var(--halo);opacity:.85;min-height:2px}
+.weak{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.weak button{all:unset;cursor:pointer;display:flex;gap:10px;width:100%;box-sizing:border-box;padding:6px 0;font:12.5px var(--f-mono);color:var(--ivory)}
+.weak button span{margin-left:auto;color:var(--mist);font-variant-numeric:tabular-nums}
+.weak button:hover,.weak button:focus-visible{color:var(--halo)}
 .hint{font-family:var(--f-mono);font-size:11px;color:var(--mist);line-height:1.7;border-top:1px solid var(--line);padding-top:14px}
 .hint kbd{font:inherit;color:var(--ivory)}
 
@@ -127,6 +180,7 @@ body{background:var(--ink);color:var(--ivory);font-family:var(--f-body);overflow
     <input id="q" type="search" placeholder="Find a concept…" autocomplete="off" aria-label="Find a concept">
     <ul class="results" id="results" hidden></ul>
   </div>
+  <button class="quiz-open" id="quizBtn" type="button">Pop quiz</button>
 </header>
 
 <aside class="panel"><div class="panel-scroll" id="panel" aria-live="polite"></div>
@@ -142,6 +196,7 @@ body{background:var(--ink);color:var(--ivory);font-family:var(--f-body);overflow
   <button id="zreset">Reset view</button>
 </div>
 <div id="tip" hidden></div>
+<div class="quiz" id="quiz" role="dialog" aria-modal="true" aria-labelledby="quizTitle" hidden><div class="quiz-card" id="quizCard"></div></div>
 
 <script>
 /*DATA*/
