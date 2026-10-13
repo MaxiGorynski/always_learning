@@ -1254,6 +1254,10 @@ function makeQuestion(n,pool){
   const wrong=[...shuffle(cands.filter(x=>x.cl===n.cl)),...shuffle(cands.filter(x=>x.cl!==n.cl))].slice(0,3);
   return {answer:n,kind:type.label,cls:type.cls||'',html,options:shuffle([n,...wrong])};
 }
+// Open question: the learner writes a definition and Claude marks it.
+function defineQuestion(n){
+  return {answer:n,kind:'Define it in your own words',cls:'',html:`Define <b>${esc(n.name)}</b>.`,options:null};
+}
 // Weighted pick: unseen concepts and ones you miss come up more often.
 function pickConcepts(pool,count,stats){
   const bag=pool.map(n=>{const [r,w]=stats[n.id]||[0,0];return {n,w:(r+w===0?3:1+3*w/(r+w))};});
@@ -1319,7 +1323,10 @@ function closeQuiz(){
 }
 function startRun(){
   const pool=qScope==='all'?nodes:nodes.filter(n=>n.cl===qScope);
-  run={scope:qScope,qs:pickConcepts(pool,qLen,quizData.stats).map(n=>makeQuestion(n,pool)),i:0,score:0,answered:0,missed:[],picked:null,done:false};
+  const maxDefine=sample?Math.ceil(qLen/4):0; let defines=0;
+  const qs=pickConcepts(pool,qLen,quizData.stats).map(n=>
+    (defines<maxDefine&&Math.random()<.2&&++defines)?defineQuestion(n):makeQuestion(n,pool));
+  run={scope:qScope,qs,i:0,score:0,answered:0,missed:[],picked:null,done:false};
   renderQuestion();
 }
 function renderQuestion(){
@@ -1329,9 +1336,14 @@ function renderQuestion(){
     <div class="qbar"><i style="width:${100*run.i/run.qs.length}%"></i></div>
     <div class="qkind">${q.kind}</div>
     <p class="qtext ${q.cls}">${q.html}</p>
-    <ul class="opts">${q.options.map((o,i)=>`<li><button data-opt="${i}"><span class="k">${i+1}</span>${esc(o.name)}</button></li>`).join('')}</ul>
+    ${q.options
+      ?`<ul class="opts">${q.options.map((o,i)=>`<li><button data-opt="${i}"><span class="k">${i+1}</span>${esc(o.name)}</button></li>`).join('')}</ul>`
+      :`<p class="defhint">What is it, what problem does it solve, and what does it cost? A few sentences is plenty.</p>
+        <label for="defBox" class="eyebrow">Your answer</label>
+        <textarea class="defbox" id="defBox" placeholder="In my own words…"></textarea>
+        <div class="qactions" id="defActions"><button class="go" data-act="grade">Check my answer</button><button class="ghost" data-act="skip">Skip</button></div>`}
     <div id="qAfter"></div>`;
-  quizCard.querySelector('.opts button').focus();
+  quizCard.querySelector(q.options?'.opts button':'#defBox').focus();
 }
 // credit: 1 right, 0.5 partly right (open answers), 0 wrong
 function record(q,credit){
@@ -1353,6 +1365,7 @@ function answer(i){
     <div class="qactions"><button class="go" data-act="next">${last?'See results':'Next question'}</button><button class="ghost" data-open="${q.answer.id}">Open card</button></div>`;
   quizCard.querySelector('[data-act="next"]').focus();
 }
+function gradeDefinition(){}
 function finishRun(){
   if(!run||run.done) return null;
   run.done=true; if(!run.answered) return null;
@@ -1388,13 +1401,20 @@ quizCard.addEventListener('click',ev=>{
   if(act==='start'||act==='again') return startRun();
   if(b.dataset.opt!==undefined) return answer(+b.dataset.opt);
   if(act==='next') return nextQuestion();
+  if(act==='grade') return gradeDefinition();
+  if(act==='skip') return nextQuestion();  // skipped questions don't count either way
   if(act==='home') return renderQuizHome();
   if(b.dataset.open){const n=byId[b.dataset.open];closeQuiz();select(n);}
 });
 quizEl.addEventListener('click',ev=>{if(ev.target===quizEl)closeQuiz();});
 quizEl.addEventListener('keydown',ev=>{
   if(ev.key==='Escape'){ev.preventDefault();closeQuiz();return;}
-  const d=+ev.key; if(run&&run.picked===null&&d>=1&&d<=4&&run.qs[run.i].options[d-1]) answer(d-1);
+  if(ev.target.tagName==='TEXTAREA'){
+    if(ev.key==='Enter'&&(ev.metaKey||ev.ctrlKey)){ev.preventDefault();gradeDefinition();}
+    return;
+  }
+  const d=+ev.key, q=run&&run.qs[run.i];
+  if(q&&q.options&&run.picked===null&&d>=1&&d<=4) answer(d-1);
 });
 quizBtn.onclick=openQuiz;
 
