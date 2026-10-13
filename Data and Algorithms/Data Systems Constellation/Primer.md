@@ -1,6 +1,6 @@
 # Data Systems Primer
 
-Bitesized definitions for the 80 concepts in `Constellation.html`, grouped by region.
+Plain-language introductions to the 80 concepts in `Constellation.html`, grouped by region. Each one says what problem the concept solves, what it is, and the trade-off it brings.
 
 ## Storage engines
 - **B-Tree**: The data structure behind almost every database index. Without an index, finding one row means scanning the whole table. A B-tree keeps keys sorted in a shallow, wide tree of disk pages, so the database can find any key, or any range of keys, by reading just three or four pages, even across billions of rows. It’s the default index in Postgres, MySQL and most relational databases.
