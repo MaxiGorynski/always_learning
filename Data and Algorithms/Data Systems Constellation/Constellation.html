@@ -1158,5 +1158,70 @@ askBox.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&!ev.shiftKey){ev.pre
 askBox.addEventListener('input',()=>{askBox.style.height='auto';askBox.style.height=Math.min(140,askBox.scrollHeight)+'px';});
 stopBtn.onclick=()=>{if(chatKey&&pending[chatKey])pending[chatKey].ctl.abort();};
 
+/* ---------- quiz: questions built from the cards ---------- */
+// Other names a concept goes by in the card text, so the answer can be blanked out of its own question.
+const ALIASES={
+  btree:['B-tree'],lsm:['LSM tree','LSM'],wal:['write-ahead log','WAL'],bloom:['bloom filter','filter'],vacuum:['vacuuming','vacuum','autovacuum'],
+  wamp:['amplification','amplify'],checkpoint:['checkpoint'],columnar:['columnar','column-wise'],secidx:['secondary index'],ios:['index-only scan'],
+  pitr:['point-in-time recovery','PITR'],acid:['ACID'],si:['snapshot isolation'],serial:['serializable','serializability'],dirty:['dirty read'],
+  rskew:['read skew'],wskew:['write skew','write-skew'],phantom:['phantom'],optlock:['optimistic locking'],pesslock:['pessimistic locking','pessimistic lock'],
+  escalation:['escalation','escalates','escalate'],dtx:['distributed transaction'],'2pc':['two-phase commit','2PC'],'3pc':['three-phase commit','3PC'],
+  saga:['saga'],generals:['Two Generals'],raft:['Raft'],election:['election'],quorum:['quorum'],split:['split-brain'],dlock:['distributed lock'],
+  idem:['idempotent','idempotency'],eos:['exactly-once','exactly once'],eventual:['eventually','eventual consistency'],ml:['multi-leader'],
+  lf:['leader–follower','single-leader'],replicas:['read replica','replica'],physrep:['physical replication'],logrep:['logical replication'],
+  cdc:['CDC','change data capture'],ha:['availability','high availability'],hscale:['horizontally','scale out'],sharding:['sharding','shard'],
+  dskew:['skew','skewed'],chash:['consistent hashing'],lb:['load balancer','load-balanced','load balancing'],cache:['cache','cached','caching'],
+  ratelimit:['rate limit','rate limiting'],breaker:['circuit breaker','breaker'],retrystorm:['retry storm'],herd:['thundering herd'],
+  pool:['connection pool','pool'],mux:['multiplexing','multiplexed'],leaks:['leak','leaked'],mview:['materialized view'],readmodel:['read model'],
+  es:['event sourcing','event-sourced'],dw:['data warehouse','warehouse'],planner:['query planner','planner'],cbo:['cost-based'],denorm:['denormalization'],
+  norm:['normalization'],rrepair:['read repair'],failover:['failover'],reshard:['resharding'],rebalance:['rebalancing']
+};
+const reEsc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+const BLANK='\u0000';
+function nameVariants(n){
+  const v=new Set([n.name,n.name.replace(/\s*\(.*?\)/g,'')]);
+  const par=n.name.match(/\(([^)]+)\)/); if(par) v.add(par[1]);
+  (ALIASES[n.id]||[]).forEach(x=>v.add(x));
+  return [...v].filter(Boolean).sort((a,b)=>b.length-a.length);
+}
+function maskFor(text,n){
+  let t=text;
+  for(const v of nameVariants(n)) t=t.replace(new RegExp('(^|[^\\w])'+reEsc(v)+'(e?s)?(?![\\w])','gi'),(m,pre)=>pre+BLANK);
+  return t;
+}
+const qHtml=t=>fmt(t).replace(/\u0000/g,'<mark>▢▢▢</mark>');
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const QTYPES=[
+  {k:'def',label:'Which concept is this?',text:n=>n.def},
+  {k:'an', label:'Which concept does this analogy describe?',text:n=>DETAILS[n.id].an,cls:'analogy'},
+  {k:'ex', label:'Which concept is this an example of?',text:n=>DETAILS[n.id].ex},
+  {k:'rel',label:'Which concept completes this relationship?'}
+];
+function makeQuestion(n,pool){
+  const type=QTYPES[Math.floor(Math.random()*QTYPES.length)];
+  let html,anchor=null;
+  if(type.k==='rel'){
+    const e=n.links[Math.floor(Math.random()*n.links.length)]; anchor=e.a===n?e.b:e.a;
+    html=`<b>${esc(anchor.name)}</b> ↔ <mark>▢▢▢</mark><br>${qHtml(maskFor(e.rel,n))}`;
+  } else html=qHtml(maskFor(type.text(n),n));
+  // distractors: never the answer, never a neighbour of the relation's anchor; same region first (harder)
+  const exclude=new Set([n]); if(anchor){exclude.add(anchor);anchor.links.forEach(e=>{exclude.add(e.a);exclude.add(e.b);});}
+  let cands=pool.filter(x=>!exclude.has(x)); if(cands.length<3) cands=nodes.filter(x=>!exclude.has(x));
+  const wrong=[...shuffle(cands.filter(x=>x.cl===n.cl)),...shuffle(cands.filter(x=>x.cl!==n.cl))].slice(0,3);
+  return {answer:n,kind:type.label,cls:type.cls||'',html,options:shuffle([n,...wrong])};
+}
+// Weighted pick: unseen concepts and ones you miss come up more often.
+function pickConcepts(pool,count,stats){
+  const bag=pool.map(n=>{const [r,w]=stats[n.id]||[0,0];return {n,w:(r+w===0?3:1+3*w/(r+w))};});
+  const out=[];
+  while(out.length<count){
+    if(!bag.length) bag.push(...pool.map(n=>({n,w:1})));
+    let t=Math.random()*bag.reduce((s,b)=>s+b.w,0),i=0;
+    for(;i<bag.length-1;i++){t-=bag[i].w;if(t<=0)break;}
+    out.push(bag.splice(i,1)[0].n);
+  }
+  return out;
+}
+
 renderIntro();
 </script>
