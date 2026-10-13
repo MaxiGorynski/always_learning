@@ -919,6 +919,14 @@ function renderIntro(){
     <ul class="legend">${clusterKeys.map(k=>`<li><button data-cl="${k}" aria-pressed="${clusterFocus===k}"><span class="dot" style="color:${CLUSTERS[k].color}"></span>${CLUSTERS[k].name}<span class="ct">${counts[k]}</span></button></li>`).join('')}</ul>
     <div class="hint"><kbd>Drag</kbd> to orbit · <kbd>Scroll</kbd>, <kbd>+</kbd>/<kbd>−</kbd> or double-click to zoom<br>Click a region to fly to it · <kbd>Esc</kbd> to return</div>`;
   panel.querySelectorAll('.legend button').forEach(btn=>btn.onclick=()=>selectRegion(btn.dataset.cl));
+  const recent=Object.entries(chatIndex).filter(([k,v])=>v&&v.n&&(k[0]==='n'?byId[k.slice(2)]:CLUSTERS[k.slice(2)])).sort((x,y)=>y[1].last-x[1].last).slice(0,6);
+  if(recent.length){
+    const sec=document.createElement('div');sec.style.cssText='display:grid;gap:8px';
+    sec.innerHTML=`<div class="eyebrow">Recent conversations</div><ul class="legend">${recent.map(([k,v])=>{const cl=k[0]==='n'?byId[k.slice(2)].cl:k.slice(2);
+      return `<li><button data-k="${k}"><span class="dot" style="color:${CLUSTERS[cl].color}"></span>${esc(cardName(k))}<span class="ct">${v.n} · ${dayFmt.format(v.last)}</span></button></li>`}).join('')}</ul>`;
+    panel.insertBefore(sec,panel.querySelector('.hint'));
+    sec.querySelectorAll('button').forEach(btn=>btn.onclick=()=>{const k=btn.dataset.k;k[0]==='n'?select(byId[k.slice(2)]):selectRegion(k.slice(2));});
+  }
   mountChat(null);
 }
 function renderRegion(k){
