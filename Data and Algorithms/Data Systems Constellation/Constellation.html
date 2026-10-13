@@ -918,6 +918,8 @@ canvas.addEventListener('wheel',ev=>{ev.preventDefault();
   zoomBy(Math.exp(Math.max(-1,Math.min(1,dy*.004))));},{passive:false});
 canvas.addEventListener('dblclick',ev=>{if(!pickNode(ev.clientX,ev.clientY)) zoomBy(.6);});
 addEventListener('keydown',ev=>{
+  if(!quizEl.hidden) return;  // the quiz handles its own keys
+  if(ev.target.tagName==='TEXTAREA') return;
   if(ev.key==='Escape'){clusterFocus=null;deselect();}
   if(ev.target.tagName==='INPUT') return;
   if(ev.key==='+'||ev.key==='=') zoomBy(.7);
@@ -956,7 +958,7 @@ function renderNode(n,preview){
     <div class="eyebrow" style="color:${C.color}"><span class="dot"></span><span style="color:var(--mist)">${C.name}</span></div>
     <h2>${esc(n.name)}</h2>
     <p class="def">${esc(n.def)}</p>
-    ${preview?'<div class="more">Click the star for an example and an analogy</div>':facets(DETAILS[n.id])}
+    ${preview?'<div class="more">Click the star for an example and an analogy</div>':quizRecord(n)+facets(DETAILS[n.id])}
     <div class="eyebrow">Linked to ${n.links.length}</div>
     <ul class="links">${n.links.map(e=>{const o=e.a===n?e.b:e.a;return `<li><button data-id="${o.id}"><span class="dot" style="color:${CLUSTERS[o.cl].color}"></span><span class="nm">${esc(o.name)}</span><span class="rel">${esc(e.rel)}</span></button></li>`}).join('')}</ul>
     ${preview?'':'<section class="chat" id="chat" aria-live="polite"></section>'}`;
