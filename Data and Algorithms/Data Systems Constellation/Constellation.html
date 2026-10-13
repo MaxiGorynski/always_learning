@@ -1276,7 +1276,7 @@ function pickConcepts(pool,count,stats){
 const quizEl=document.getElementById('quiz'),quizCard=document.getElementById('quizCard'),quizBtn=document.getElementById('quizBtn');
 let quizData={stats:{},attempts:[]},quizLoaded=false,run=null,qScope='all',qLen=10;
 store.get('quiz').then(v=>{
-  if(v) quizData={stats:(v.stats&&typeof v.stats==='object')?v.stats:{},attempts:Array.isArray(v.attempts)?v.attempts:[]};
+  if(v) quizData={stats:(v.stats&&typeof v.stats==='object')?v.stats:{},attempts:Array.isArray(v.attempts)?v.attempts:[],defs:(v.defs&&typeof v.defs==='object')?v.defs:{}};
   quizLoaded=true; if(!quizEl.hidden&&!run) renderQuizHome();
 });
 const scopeName=k=>k==='all'?'Whole network':CLUSTERS[k].name;
@@ -1365,7 +1365,55 @@ function answer(i){
     <div class="qactions"><button class="go" data-act="next">${last?'See results':'Next question'}</button><button class="ghost" data-open="${q.answer.id}">Open card</button></div>`;
   quizCard.querySelector('[data-act="next"]').focus();
 }
-function gradeDefinition(){}
+const VERDICT={correct:{credit:1,label:'Correct',cls:''},partly:{credit:.5,label:'Partly right · half a point',cls:'partly'},incorrect:{credit:0,label:'Not quite',cls:'miss'}};
+async function gradeDefinition(){
+  const q=run&&run.qs[run.i]; if(!q||q.options||run.picked!==null||run.grading) return;
+  const box=document.getElementById('defBox'),after=document.getElementById('qAfter'),acts=document.getElementById('defActions');
+  const text=box.value.trim();
+  if(text.split(/\s+/).filter(Boolean).length<4){after.innerHTML='<p class="marking" style="animation:none">Write at least a sentence so Claude has something to mark.</p>';box.focus();return;}
+  if(!sample){after.innerHTML='<p class="intro">Claude isn’t available to mark answers in this view.</p>';return;}
+  run.grading=true; box.disabled=true; acts.hidden=true;
+  after.innerHTML='<p class="marking">Claude is marking your answer</p>';
+  const n=q.answer,x=DETAILS[n.id];
+  const prompt=`You are marking a software engineer's answer in a self-study quiz on data-systems concepts. They were asked to define "${n.name}" in their own words.
+
+Reference material (for you only; the learner did not see it while answering):
+Summary: ${n.def}
+In depth: ${x.d}
+
+The learner's answer:
+"""${text.slice(0,4000)}"""
+
+Judge understanding, not wording, spelling or length. Mark "correct" if they capture the core idea and what it is for. Mark "partly" if the core idea is there but with a significant gap or a misconception. Mark "incorrect" if the core idea is missing or wrong. Be fair and encouraging, and specific.
+
+Reply with only this JSON object:
+{"verdict": "correct" | "partly" | "incorrect", "feedback": "2-3 sentences addressed to the learner: what they got right, then what was missing or wrong", "missing": "the single most important point they missed, or an empty string"}`;
+  try{
+    const r=await sample.json(prompt);
+    if(!run||run.qs[run.i]!==q) return;  // quiz closed or moved on while marking
+    const v=VERDICT[r&&r.verdict]; if(!v||typeof r.feedback!=='string') throw {code:'invalid_json'};
+    run.grading=false; run.picked=0;
+    record(q,v.credit);
+    saveDefinition(n,text,r.verdict,r.feedback);
+    document.getElementById('qScore').textContent='Score '+num(run.score);
+    const last=run.i===run.qs.length-1;
+    after.innerHTML=`<div class="verdict ${v.cls}"><b>${v.label}</b><p>${esc(r.feedback)}</p>${r.missing?`<p><b style="font:inherit;color:inherit;letter-spacing:0;text-transform:none;font-weight:600">Key point:</b> ${esc(r.missing)}</p>`:''}<p class="ref">The card says: ${esc(n.def)}</p></div>
+      <div class="qactions"><button class="go" data-act="next">${last?'See results':'Next question'}</button><button class="ghost" data-open="${n.id}">Open card</button></div>`;
+    quizCard.querySelector('[data-act="next"]').focus();
+  }catch(e){
+    if(!run||run.qs[run.i]!==q) return;
+    run.grading=false; box.disabled=false; acts.hidden=false;
+    if(e&&(e.code==='not_granted'||e.code==='sampling_disabled')) sample=null;
+    const msg=e&&e.code==='invalid_json'?'Claude’s marking came back in an unexpected form.':(ERR[e&&e.code]||ERR.upstream_error);
+    after.innerHTML=`<p class="intro">${esc(msg)} ${sample?'Check your answer again, or skip this question.':'You can skip this question.'}</p>`;
+  }
+}
+// Keep each concept's last few written definitions, so progress shows in the learner's own words.
+function saveDefinition(n,answer,verdict,feedback){
+  const defs=quizData.defs||(quizData.defs={});
+  defs[n.id]=(defs[n.id]||[]).concat({at:Date.now(),answer:answer.slice(0,2000),verdict,feedback}).slice(-10);
+  store.set('quiz',quizData);
+}
 function finishRun(){
   if(!run||run.done) return null;
   run.done=true; if(!run.answered) return null;
