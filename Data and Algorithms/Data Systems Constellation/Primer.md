@@ -74,16 +74,16 @@ Bitesized definitions for the 80 concepts in `Constellation.html`, grouped by re
 - **Data Locality**: Keeping data close to where it’s used. That means storing records that are read together in the same place (the same partition or row), and running computation on the machine that already holds the data instead of shipping it across the network. Network hops are expensive, so good locality makes queries and jobs dramatically faster.
 
 ## Traffic & resilience
-- **Load Balancing**: Spread requests across instances.
-- **Caching**: Keep hot data in faster storage; invalidation is the hard part.
-- **Rate Limiting**: Cap requests per client per time window.
-- **Backpressure**: Downstream tells upstream to slow down.
-- **Circuit Breaker**: Stop calling a failing dependency; fail fast, probe later.
-- **Retry Storm**: Mass retries pile load onto an already struggling service.
-- **Thundering Herd**: Many clients wake at once and stampede a resource.
-- **Connection Pooling**: Reuse open DB connections instead of opening one per request.
-- **Connection Multiplexing**: Many logical streams share one physical connection.
-- **Connection Leaks**: Connections borrowed and never returned until the pool runs dry.
+- **Load Balancing**: Spreading incoming requests across several servers so none is overwhelmed. The load balancer sits in front, picks a healthy server for each request (in turn, or whichever is least busy), and stops sending traffic to servers that fail health checks. It’s what makes horizontal scaling and zero-downtime deploys possible.
+- **Caching**: Keeping copies of frequently used data somewhere faster, such as memory or Redis, so you don’t fetch or compute it from the slow source every time. A good cache cuts database load and response times dramatically. The hard part is keeping cached data fresh when the source changes; stale data and stampedes when entries expire are the classic problems.
+- **Rate Limiting**: Capping how many requests a client can make in a time window, such as 100 per minute per API key. Requests over the limit are rejected, usually with HTTP 429, instead of being processed. It protects a service from abuse, stops one noisy customer starving the rest, and keeps traffic spikes from overwhelming it.
+- **Backpressure**: A way for a slow part of a system to tell a faster part to slow down. Without it, a producer sending work faster than the consumer can handle fills queues until memory runs out or delays become enormous. With backpressure, the producer is made to wait, buffer a bounded amount, or drop work, so the system degrades gracefully.
+- **Circuit Breaker**: A wrapper around calls to another service that stops calling it when it’s clearly failing. After too many errors the breaker ‘opens’, and requests fail instantly instead of waiting on timeouts. After a cool-down it lets one test request through to check whether the service has recovered. It stops one failing dependency dragging down everything that calls it.
+- **Retry Storm**: When a struggling service makes its callers retry, and the retries add so much extra load that the service can never recover. If several layers each retry three times, one failed request can turn into dozens. Exponential backoff, random jitter and retry limits are the standard defences.
+- **Thundering Herd**: When a large number of clients all do the same expensive thing at the same instant. The classic case is a popular cache entry expiring: thousands of requests miss the cache at once and hit the database together. It also happens after restarts, or with timers that fire at the same moment on every machine.
+- **Connection Pooling**: Keeping a set of open database connections ready for reuse, instead of opening a new one for every request. Opening a connection is slow (network handshakes, authentication) and each one uses memory on the database server. A pool lends a connection to each request and takes it back afterwards, keeping both latency and the database’s connection count under control.
+- **Connection Multiplexing**: Sending many independent requests over a single network connection at the same time, with each request tagged so its response can be matched up. It avoids the cost of opening many connections and stops one slow request blocking the ones behind it. HTTP/2 and gRPC both work this way.
+- **Connection Leaks**: A bug where code borrows a database connection from the pool and never gives it back, usually because an error skipped the cleanup step. Each leak permanently removes one connection from the pool. Eventually the pool is empty, every new request waits for a connection that never comes, and the app stops responding, even though the database is barely busy.
 
 ## Modeling & querying
 - **Normalization**: Each fact stored once; no redundancy.
