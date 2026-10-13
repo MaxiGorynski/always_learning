@@ -17,18 +17,18 @@ Bitesized definitions for the 80 concepts in `Constellation.html`, grouped by re
 - **Backups vs. PITR**: Two different ways to get data back. A backup is a full copy taken at one moment, so restoring it loses everything written since. Point-in-time recovery (PITR) combines a backup with the continuous log of every change made after it, so you can restore to any exact second, such as one second before someone ran DELETE without a WHERE clause.
 
 ## Transactions & isolation
-- **ACID**: Atomicity, Consistency, Isolation, Durability.
-- **MVCC**: Keep multiple row versions so readers see a snapshot and never block writers.
-- **Snapshot Isolation**: Each transaction reads from a consistent snapshot taken at its start.
-- **Serializability**: Strongest isolation: the outcome equals some serial order.
-- **Dirty Read**: Reading another transaction's uncommitted writes.
-- **Read Skew**: Seeing parts of the database at different moments, so totals don't add up.
-- **Write Skew**: Two transactions read the same data, write different rows, and jointly break an invariant.
-- **Phantom Read**: Re-running a range query returns rows another transaction just inserted.
-- **Optimistic Locking**: No locks; check a version on write, retry on conflict.
-- **Pessimistic Locking**: Lock first, then act; others wait.
-- **Deadlock**: Transactions wait on each other's locks in a cycle; the database kills one.
-- **Lock Escalation**: The database swaps many row locks for one table lock to save memory.
+- **ACID**: The four guarantees a database transaction gives you. Atomicity: all of its changes happen, or none do. Consistency: rules like ‘a balance can’t go negative’ hold before and after. Isolation: concurrent transactions don’t trip over each other’s half-finished work. Durability: once committed, data survives crashes. Together they let you write correct code without reasoning about every possible failure.
+- **MVCC**: The technique most databases use so that reads and writes don’t block each other. Instead of overwriting a row, the database keeps the old version and adds a new one. Each transaction sees the versions that were committed when it started, so a long-running report reads a stable picture while other users keep writing. The cost is cleaning up old versions later.
+- **Snapshot Isolation**: An isolation level where every transaction works from a frozen picture of the database as it was when the transaction began. You never see others’ half-finished changes, and reading the same data twice always gives the same answer. Many databases default to it because it’s fast and intuitive, but it still allows one subtle bug: write skew.
+- **Serializability**: The strongest isolation level. The database guarantees the result is the same as if transactions had run one at a time, in some order, with no overlap. Every concurrency anomaly disappears, so you can reason about each transaction as if it were alone. The price is lower throughput, and transactions that sometimes get aborted and must be retried.
+- **Dirty Read**: Reading data that another transaction has written but not yet committed. If that transaction then rolls back, you’ve made a decision based on data that never officially existed. It’s the weakest possible guarantee, and almost every database prevents it by default, so you’ll mostly meet it as the first rung on the ladder of isolation levels.
+- **Read Skew**: When a transaction reads related pieces of data at slightly different moments and sees a combination that never actually existed. Each value it read was real and committed, but another transaction changed things between the reads. The classic case is checking two bank accounts during a transfer and seeing money missing or duplicated. Snapshot isolation prevents it.
+- **Write Skew**: A sneaky concurrency bug. Two transactions read the same data, each makes a decision based on it, and each writes to a different row. Neither overwrites the other, so the database sees no conflict, yet together they break a rule that each on its own would have kept. It slips past snapshot isolation and needs serializable isolation or explicit locks.
+- **Phantom Read**: When a transaction runs the same search twice and the second time new rows appear, or rows vanish, because another transaction inserted or deleted matching rows in between. Locking existing rows can’t prevent it, because the new rows didn’t exist yet to be locked. It matters for checks like ‘is this time slot free?’ just before booking it.
+- **Optimistic Locking**: A strategy for concurrent updates that assumes conflicts are rare. Instead of locking a record while you work on it, you note its version number, and when you save you tell the database ‘only update if the version hasn’t changed’. If someone else changed it first, your update fails and you retry. There’s no waiting and no deadlock, but many retries if conflicts become common.
+- **Pessimistic Locking**: A strategy for concurrent updates that assumes conflicts are likely. You lock the record before reading or changing it, and anyone else who wants it waits until you finish. Nobody can change the data underneath you, which suits contested resources like seats or stock, but waiting transactions reduce throughput and can deadlock.
+- **Deadlock**: When two or more transactions are each waiting for a lock the other holds, so none of them can ever proceed. A holds row 1 and wants row 2; B holds row 2 and wants row 1. Databases detect the cycle and kill one transaction so the other can finish, so your application must be ready to retry the one that was killed.
+- **Lock Escalation**: When a database decides it is tracking too many small locks and replaces them with one big lock. Locking 10,000 individual rows uses a lot of memory, so the database (notably SQL Server) may lock the whole table instead. That saves memory but blocks everyone else who wanted any row in the table, causing surprise slowdowns and deadlocks.
 
 ## Consensus & coordination
 - **Distributed Transactions**: One atomic transaction across several nodes or services.
