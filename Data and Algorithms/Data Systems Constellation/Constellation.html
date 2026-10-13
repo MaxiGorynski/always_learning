@@ -1277,7 +1277,8 @@ store.get('quiz').then(v=>{
 });
 const scopeName=k=>k==='all'?'Whole network':CLUSTERS[k].name;
 const pct=(r,t)=>t?Math.round(100*r/t):0;
-function quizRecord(n){const s=quizData.stats[n.id];return s?`<div class="more">Quiz record: ${s[0]} of ${s[0]+s[1]} correct</div>`:'';}
+const num=v=>String(Math.round(v*10)/10);  // half points from partly-right answers
+function quizRecord(n){const s=quizData.stats[n.id];return s?`<div class="more">Quiz record: ${num(s[0])} of ${num(s[0]+s[1])} correct</div>`:'';}
 const quizHead=t=>`<div class="quiz-head"><h2 id="quizTitle">${esc(t)}</h2><button class="x" data-act="close">Close</button></div>`;
 function progressHtml(){
   if(!quizLoaded) return '<p class="intro">Loading your progress…</p>';
@@ -1292,10 +1293,10 @@ function progressHtml(){
   const weak=nodes.filter(n=>S[n.id]&&S[n.id][1]>0).map(n=>({n,r:S[n.id][0],t:S[n.id][0]+S[n.id][1]}))
     .sort((a,b)=>a.r/a.t-b.r/b.t||b.t-a.t).slice(0,5);
   return `<div class="eyebrow">Your progress</div>
-    <div class="stats"><div><b>${A.length}</b><span>Quizzes</span></div><div><b>${total}</b><span>Answers</span></div><div><b>${pct(right,total)}%</b><span>Accuracy</span></div></div>
+    <div class="stats"><div><b>${A.length}</b><span>Quizzes</span></div><div><b>${num(total)}</b><span>Answers</span></div><div><b>${pct(right,total)}%</b><span>Accuracy</span></div></div>
     <div class="eyebrow">Accuracy by region</div><ul class="mastery">${mastery}</ul>
-    ${recent.length?`<div class="eyebrow">Last ${recent.length} quiz${recent.length>1?'zes':''} · score %</div><div class="history">${recent.map(a=>`<i style="height:${Math.max(4,pct(a.score,a.total))}%" title="${dayFmt.format(a.at)} · ${esc(scopeName(a.scope))} · ${a.score}/${a.total}"></i>`).join('')}</div>`:''}
-    ${weak.length?`<div class="eyebrow">Concepts to revisit</div><ul class="weak">${weak.map(x=>`<li><button data-open="${x.n.id}">${esc(x.n.name)}<span>${x.r}/${x.t} right</span></button></li>`).join('')}</ul>`:''}`;
+    ${recent.length?`<div class="eyebrow">Last ${recent.length} quiz${recent.length>1?'zes':''} · score %</div><div class="history">${recent.map(a=>`<i style="height:${Math.max(4,pct(a.score,a.total))}%" title="${dayFmt.format(a.at)} · ${esc(scopeName(a.scope))} · ${num(a.score)}/${a.total}"></i>`).join('')}</div>`:''}
+    ${weak.length?`<div class="eyebrow">Concepts to revisit</div><ul class="weak">${weak.map(x=>`<li><button data-open="${x.n.id}">${esc(x.n.name)}<span>${num(x.r)}/${num(x.t)} right</span></button></li>`).join('')}</ul>`:''}`;
 }
 function renderQuizHome(){
   run=null;
@@ -1324,7 +1325,7 @@ function startRun(){
 function renderQuestion(){
   const q=run.qs[run.i];
   quizCard.innerHTML=quizHead(scopeName(run.scope))+`
-    <div class="qmeta"><span>Question ${run.i+1} of ${run.qs.length}</span><span id="qScore">Score ${run.score}</span></div>
+    <div class="qmeta"><span>Question ${run.i+1} of ${run.qs.length}</span><span id="qScore">Score ${num(run.score)}</span></div>
     <div class="qbar"><i style="width:${100*run.i/run.qs.length}%"></i></div>
     <div class="qkind">${q.kind}</div>
     <p class="qtext ${q.cls}">${q.html}</p>
@@ -1332,15 +1333,21 @@ function renderQuestion(){
     <div id="qAfter"></div>`;
   quizCard.querySelector('.opts button').focus();
 }
-function answer(i){
-  const q=run.qs[run.i]; if(run.picked!==null) return;
-  run.picked=i; run.answered++;
-  const ok=q.options[i]===q.answer, st=(quizData.stats[q.answer.id]||[0,0]).slice();
-  st[ok?0:1]++; quizData.stats[q.answer.id]=st;
-  if(ok) run.score++; else run.missed.push(q.answer);
+// credit: 1 right, 0.5 partly right (open answers), 0 wrong
+function record(q,credit){
+  run.answered++; run.score+=credit;
+  const st=(quizData.stats[q.answer.id]||[0,0]).slice();
+  st[0]+=credit; st[1]+=1-credit; quizData.stats[q.answer.id]=st;
+  if(credit<1) run.missed.push(q.answer);
   store.set('quiz',quizData);
+}
+function answer(i){
+  const q=run.qs[run.i]; if(run.picked!==null||!q.options) return;
+  run.picked=i;
+  const ok=q.options[i]===q.answer;
+  record(q,ok?1:0);
   quizCard.querySelectorAll('.opts button').forEach((b,j)=>{b.disabled=true;if(q.options[j]===q.answer)b.classList.add('right');else if(j===i)b.classList.add('wrong');});
-  document.getElementById('qScore').textContent='Score '+run.score;
+  document.getElementById('qScore').textContent='Score '+num(run.score);
   const last=run.i===run.qs.length-1;
   document.getElementById('qAfter').innerHTML=`<div class="verdict ${ok?'':'miss'}"><b>${ok?'Correct':'Not quite · it’s '+esc(q.answer.name)}</b><p>${esc(q.answer.def)}</p></div>
     <div class="qactions"><button class="go" data-act="next">${last?'See results':'Next question'}</button><button class="ghost" data-open="${q.answer.id}">Open card</button></div>`;
@@ -1361,7 +1368,7 @@ function renderResults(best){
   const vs=best===null?`Your first quiz on ${name}.`:p>best?`A new best on ${name}, up from ${best}%.`:`Your best on ${name} is ${best}%.`;
   const missed=[...new Set(run.missed)];
   quizCard.innerHTML=quizHead('Results')+`
-    <div class="big">${run.score}/${run.answered}</div>
+    <div class="big">${num(run.score)}/${run.answered}</div>
     <p class="intro">${msg} ${esc(vs)}</p>
     ${missed.length?`<div class="eyebrow">Missed this round</div><ul class="weak">${missed.map(n=>`<li><button data-open="${n.id}">${esc(n.name)}<span>Open card</span></button></li>`).join('')}</ul>`:''}
     <div class="qactions"><button class="go" data-act="again">Another round</button><button class="ghost" data-act="home">See progress</button></div>`;
