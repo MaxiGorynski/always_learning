@@ -68,19 +68,31 @@ body{background:var(--ink);color:var(--ivory);font-family:var(--f-body);overflow
 .members{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0;padding:0}
 .members button{all:unset;cursor:pointer;font:12px var(--f-mono);padding:5px 9px;border:1px solid var(--line);color:var(--ivory)}
 .members button:hover,.members button:focus-visible{border-color:var(--halo);color:var(--halo)}
-.chat{display:grid;gap:12px;border-top:1px solid var(--line);padding-top:16px}
-.chat .day{font-family:var(--f-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mist);display:flex;align-items:center;gap:10px}
-.chat .day::after{content:"";flex:1;height:1px;background:var(--line)}
-.msg{display:grid;gap:4px;min-width:0}
-.msg .who{font:500 10.5px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mist)}
-.msg.you .who{color:var(--halo)}
-.msg .body{font-size:13.5px;line-height:1.6;color:var(--ivory);overflow-wrap:anywhere}
-.msg.you .body{font-family:var(--f-mono);font-size:12.5px;color:var(--ivory);background:color-mix(in srgb,var(--halo) 8%,transparent);border-left:1px solid var(--halo);padding:8px 10px}
-.msg .body p{margin:0 0 8px}.msg .body p:last-child{margin:0}
-.msg .body ul{margin:0 0 8px;padding-left:18px}.msg .body li{margin:2px 0}
-.msg .body code{font-family:var(--f-mono);font-size:12px;color:var(--halo)}
-.msg .body b{font-weight:600}
-.msg .thinking{color:var(--mist);font-style:italic}
+.chat{display:grid;gap:10px;border-top:1px solid var(--line);padding-top:12px}
+.chat-head{all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;padding:4px 0}
+.chat-head .eyebrow{flex:1}
+.chat-head .chev{font:10.5px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mist);display:flex;align-items:center;gap:6px}
+.chat-head .chev::after{content:"";width:6px;height:6px;border-right:1px solid currentColor;border-bottom:1px solid currentColor;transform:rotate(45deg) translate(-2px,-2px);transition:transform .2s}
+.chat-head[aria-expanded="false"] .chev::after{transform:rotate(-45deg)}
+.chat-head:hover .chev,.chat-head:focus-visible .chev{color:var(--halo)}
+.chat-head:focus-visible{outline:1px solid var(--halo);outline-offset:4px}
+.qa-list{display:grid;border-top:1px solid var(--line)}
+.qa{border-bottom:1px solid var(--line)}
+.qa summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:10px minmax(0,1fr);gap:4px 10px;padding:10px 0;align-items:baseline}
+.qa summary::-webkit-details-marker{display:none}
+.qa summary::before{content:"";width:5px;height:5px;border-right:1px solid var(--mist);border-bottom:1px solid var(--mist);transform:rotate(-45deg);transition:transform .2s;align-self:center}
+.qa[open] summary::before{transform:rotate(45deg);border-color:var(--halo)}
+.qa summary:focus-visible{outline:1px solid var(--halo);outline-offset:2px}
+.qa .q{font:12.5px/1.5 var(--f-mono);color:var(--ivory);overflow-wrap:anywhere}
+.qa:not([open]) .q{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.qa[open] .q{color:var(--halo)}
+.qa .when{grid-column:2;font:10px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mist)}
+.qa .answer{padding:0 0 14px 20px;font-size:13.5px;line-height:1.6;color:var(--ivory);overflow-wrap:anywhere;min-width:0}
+.qa .answer p{margin:0 0 8px}.qa .answer p:last-child{margin:0}
+.qa .answer ul{margin:0 0 8px;padding-left:18px}.qa .answer li{margin:2px 0}
+.qa .answer code{font-family:var(--f-mono);font-size:12px;color:var(--halo)}
+.qa .answer b{font-weight:600}
+.qa .thinking{color:var(--mist);font-style:italic}
 .empty-chat{margin:0;font-size:13px;line-height:1.55;color:var(--mist)}
 .starters{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0;padding:0}
 .starters button{all:unset;cursor:pointer;font:12px var(--f-body);padding:5px 9px;border:1px dashed var(--line);color:var(--mist)}
@@ -1090,29 +1102,47 @@ function saveChat(key){
   store.set('index',{chats:chatIndex});
 }
 const STARTERS=['Explain it like I’m new to this','Give me another real-world example','How does this come up in a system design interview?','What mistakes do engineers make with this?','Quiz me on this'];
+// Conversation display: one collapsible section; inside, one expandable item per question, newest first.
+let chatCollapsed=store.local('chatCollapsed')===true;
+const qaOpen={};  // key -> {itemIndex: bool}, the viewer's own open/closed choices
+function chatItems(turns){
+  const items=[];
+  for(const t of turns){
+    if(t.role==='user') items.push({q:t,a:[]});
+    else if(items.length) items[items.length-1].a.push(t);
+  }
+  return items;
+}
 function renderChat(){
   const el=document.getElementById('chat'); if(!el||!chatKey) return;
   const key=chatKey,c=chats[key];
   if(!c){el.innerHTML='<div class="eyebrow">Your conversation</div><p class="empty-chat">Loading your history…</p>';return;}
-  const p=pending[key];
-  let html=`<div class="eyebrow">Your conversation${c.turns.length?` · ${c.turns.filter(t=>t.role==='user').length} questions`:''}</div>`;
-  if(!c.turns.length&&!p){
-    html+=`<p class="empty-chat">Ask Claude anything about ${esc(cardName(key))}. Your questions and its answers stay on this card, dated, so you can come back and see how your understanding has grown.</p>`;
-    if(sample) html+=`<ul class="starters">${STARTERS.map(s=>`<li><button type="button" data-q="${esc(s)}">${esc(s)}</button></li>`).join('')}</ul>`;
+  const p=pending[key], items=chatItems(c.turns), n=items.length;
+  let html=`<button type="button" class="chat-head" id="chatToggle" aria-expanded="${!chatCollapsed}"><span class="eyebrow">Your conversation${n?` · ${n} question${n>1?'s':''}`:''}</span><span class="chev">${chatCollapsed?'Show':'Hide'}</span></button>`;
+  if(!chatCollapsed){
+    if(!n){
+      html+=`<p class="empty-chat">Ask Claude anything about ${esc(cardName(key))}. Each question you ask is kept on this card with its answer and date, so you can come back and see how your understanding has grown.</p>`;
+      if(sample) html+=`<ul class="starters">${STARTERS.map(s=>`<li><button type="button" data-q="${esc(s)}">${esc(s)}</button></li>`).join('')}</ul>`;
+    } else {
+      const open=qaOpen[key]||(qaOpen[key]={});
+      html+='<div class="qa-list">';
+      for(let i=n-1;i>=0;i--){
+        const it=items[i], isOpen=(i in open)?open[i]:i===n-1, at=it.q.at||Date.now();
+        const answer=it.a.length?it.a.map(t=>md(t.content)).join('')
+          :(p&&i===n-1)?`<div id="pendingBody">${p.text?md(p.text):'<span class="thinking">Thinking…</span>'}</div>`
+          :'<span class="thinking">No answer was saved for this question.</span>';
+        html+=`<details class="qa" data-i="${i}"${isOpen?' open':''}><summary><span class="q">${esc(it.q.content)}</span><span class="when">${dayFmt.format(at)} · ${timeFmt.format(at)}</span></summary><div class="answer">${answer}</div></details>`;
+      }
+      html+='</div>';
+    }
   }
-  let lastDay='';
-  for(const t of c.turns){
-    const day=dayFmt.format(t.at||Date.now());
-    if(day!==lastDay){html+=`<div class="day">${day}</div>`;lastDay=day;}
-    html+=t.role==='user'
-      ?`<div class="msg you"><div class="who">You · ${timeFmt.format(t.at||Date.now())}</div><div class="body">${esc(t.content)}</div></div>`
-      :`<div class="msg"><div class="who">Claude</div><div class="body">${md(t.content)}</div></div>`;
-  }
-  if(p) html+=`<div class="msg"><div class="who">Claude</div><div class="body" id="pendingBody">${p.text?md(p.text):'<span class="thinking">Thinking…</span>'}</div></div>`;
   el.innerHTML=html;
+  document.getElementById('chatToggle').onclick=()=>{chatCollapsed=!chatCollapsed;store.local('chatCollapsed',chatCollapsed);renderChat();};
+  // record only the viewer's own clicks (the default-open newest item fires toggle too)
+  el.querySelectorAll('.qa summary').forEach(sm=>sm.addEventListener('click',()=>{const d=sm.parentElement;(qaOpen[key]||(qaOpen[key]={}))[d.dataset.i]=!d.open;}));
   el.querySelectorAll('.starters button').forEach(b=>b.onclick=()=>ask(key,b.dataset.q));
 }
-function scrollPanelEnd(){panel.scrollTop=panel.scrollHeight;}
+function scrollToChat(){const el=document.getElementById('chat');if(el)panel.scrollTop=el.offsetTop-panel.offsetTop-8;}
 const composer=document.getElementById('composer'),askBox=document.getElementById('askBox'),askBtn=document.getElementById('askBtn'),stopBtn=document.getElementById('stopBtn'),askStatus=document.getElementById('askStatus');
 function syncComposer(){
   composer.hidden=!chatKey||!sample;
@@ -1137,13 +1167,14 @@ async function ask(key,question){
   const history=c.turns.slice(-30).map(t=>({role:t.role,content:t.content}));
   c.turns.push({role:'user',content:question,at:Date.now()}); saveChat(key);
   const ctl=new AbortController(); pending[key]={text:'',ctl};
-  if(chatKey===key){askBox.value='';drafts[key]='';askStatus.textContent='';delete askStatus.dataset.err;syncComposer();scrollPanelEnd();}
+  if(chatCollapsed){chatCollapsed=false;store.local('chatCollapsed',false);}
+  if(chatKey===key){askBox.value='';drafts[key]='';askStatus.textContent='';delete askStatus.dataset.err;syncComposer();scrollToChat();}
   const input=[{role:'user',content:TUTOR+cardContext(key)},...history,{role:'user',content:question}];
   try{
     const r=await sample(input,{cache:false,signal:ctl.signal,onText:({text})=>{
       pending[key].text=text;
       const b=chatKey===key&&document.getElementById('pendingBody');
-      if(b){const near=panel.scrollHeight-panel.scrollTop-panel.clientHeight<80;b.innerHTML=md(text);if(near)scrollPanelEnd();}
+      if(b) b.innerHTML=md(text);
     }});
     c.turns.push({role:'assistant',content:r.text+(r.truncated?'\n\n(Answer cut short. Ask for the rest.)':''),at:Date.now()});
   }catch(e){
@@ -1152,7 +1183,7 @@ async function ask(key,question){
     if(e&&e.code!=='cancelled'&&chatKey===key){askStatus.textContent=ERR[e.code]||ERR.upstream_error;askStatus.dataset.err='1';}
   }finally{
     delete pending[key]; saveChat(key);
-    if(chatKey===key){syncComposer();scrollPanelEnd();}
+    if(chatKey===key) syncComposer();
   }
 }
 composer.addEventListener('submit',ev=>{ev.preventDefault();if(chatKey)ask(chatKey,askBox.value);});
