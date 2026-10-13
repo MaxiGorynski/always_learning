@@ -45,20 +45,20 @@ Bitesized definitions for the 80 concepts in `Constellation.html`, grouped by re
 - **Exactly-Once Semantics**: The guarantee that each message is processed exactly once, never lost and never duplicated. Networks can’t actually deliver that: you either risk losing messages or risk sending some twice. So exactly-once systems deliver at least once and then discard duplicates, or make processing idempotent, so the effect is as if each message arrived once.
 
 ## Replication & consistency
-- **CAP Theorem**: During a network partition, choose consistency or availability.
-- **Strong Consistency**: Every read sees the latest committed write.
-- **Eventual Consistency**: Replicas converge once writes stop; reads may be stale meanwhile.
-- **Consistent Reads**: Reads with a stated guarantee: read-your-writes, monotonic, or from the leader.
-- **Leader–Follower Replication**: One node takes writes; followers copy its log.
-- **Multi-Leader Replication**: Several nodes accept writes; conflicts must be resolved.
-- **Read Replicas**: Followers that serve read-only traffic.
-- **Physical Replication**: Ships byte-level page changes; exact clone, same version.
-- **Logical Replication**: Ships row-level changes; selective and cross-version.
-- **Geo-Replication**: Copies across regions for latency and disaster recovery.
-- **Read Repair**: Fix stale replicas during a read.
-- **Change Data Capture (CDC)**: Stream row changes out of the database log to other systems.
-- **Failover**: Promote a standby when the primary dies.
-- **High Availability**: Redundancy plus automatic recovery, measured in "nines".
+- **CAP Theorem**: A rule about distributed databases. When the network between servers breaks (a partition), you must choose between consistency, where every read sees the latest write and some requests get refused, and availability, where every request gets an answer that might be out of date. You can’t have both during a partition, and that choice frames every replicated database.
+- **Strong Consistency**: The guarantee that once a write is confirmed, every later read, from anywhere, sees it. The system behaves as if there were just one copy of the data. It’s the easiest model to program against, but keeping replicas in lockstep needs coordination between servers, which adds latency and can reduce availability.
+- **Eventual Consistency**: The guarantee that if writes stop, every replica will eventually hold the same data. Until then, different readers may see different, possibly outdated, values. It keeps systems fast and available, even across regions and network failures, at the cost of occasional stale reads that your application has to tolerate.
+- **Consistent Reads**: A practical middle ground between strong and eventual consistency: specific promises about what a reader will see. The most useful are read-your-writes (you always see your own changes) and monotonic reads (data never appears to go back in time). They fix the most confusing user-facing symptoms of replica lag without the full cost of strong consistency.
+- **Leader–Follower Replication**: The most common replication setup. One server, the leader, accepts all writes and records them in a log. The others, followers, copy that log and apply the same changes, so each holds a full copy of the data. Followers can serve reads and take over if the leader dies. Postgres, MySQL and MongoDB all work this way by default.
+- **Multi-Leader Replication**: A replication setup where more than one server accepts writes, each passing its changes to the others. Each region or data centre can write locally for low latency and keep working if another site is cut off. The catch: two leaders can change the same record at the same moment, and those conflicts have to be detected and resolved.
+- **Read Replicas**: Extra copies of a database that only serve reads. All writes still go to the primary, which streams its changes to the replicas. Most apps read far more than they write, so sending reads to replicas multiplies read capacity. The catch is lag: a replica can be slightly behind, so a user might not see a change they just made.
+- **Physical Replication**: Replicating a database by copying the exact low-level changes to its storage files, byte for byte. The replica becomes an identical clone of the primary, which makes it simple and dependable for failover. The limits: both servers must run the same database version, and you can’t replicate only some tables or send the data to a different kind of system.
+- **Logical Replication**: Replicating a database by sending a stream of row-level changes, such as ‘insert this row’ or ‘update that column’, instead of raw storage bytes. Because it describes changes logically, you can replicate just some tables, replicate between different database versions, or feed the changes into another system entirely. It’s also the foundation of change data capture.
+- **Geo-Replication**: Keeping copies of your data in several geographic regions. Users read from a nearby copy, so responses are faster, and if a whole region goes down the others carry on. The hard part is writes: keeping regions in sync means either waiting on slow cross-region round trips, or accepting that regions briefly disagree.
+- **Read Repair**: Fixing out-of-date replicas as a side effect of reading. When a read asks several replicas for a value and notices one returned an older version, the system sends the newest version back to that replica. Data that is read often heals itself over time, which keeps leaderless databases like Cassandra converging.
+- **Change Data Capture (CDC)**: Streaming every insert, update and delete from a database to other systems as it happens. Instead of other services polling the database, or the app writing to two places, CDC reads the database’s own change log and publishes each change as an event. It’s how search indexes, caches, warehouses and other services stay in sync with the source of truth.
+- **Failover**: Automatically switching to a backup server when the primary fails. The system notices the primary has stopped responding, promotes a replica to be the new primary, and redirects traffic to it. Done well, it takes seconds. Done badly, it loses recent writes or leaves two servers both believing they’re in charge.
+- **High Availability**: Designing a system to keep running when parts of it fail. That means no single point of failure: redundant servers, replicated data, health checks and automatic failover. Availability is measured in ‘nines’: 99.9% allows almost 9 hours of downtime a year, and 99.99% allows under an hour.
 
 ## Partitioning & scale
 - **Horizontal Scaling**: More machines, not bigger ones.
