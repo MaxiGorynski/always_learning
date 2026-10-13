@@ -95,8 +95,8 @@ body{background:var(--ink);color:var(--ivory);font-family:var(--f-body);overflow
 .composer button:disabled{opacity:.4;cursor:default}
 .composer button.stop{background:transparent;color:var(--ivory);outline:1px solid var(--line)}
 .composer button:focus-visible{outline:2px solid var(--ivory);outline-offset:2px}
-.quiz-open{all:unset;box-sizing:border-box;pointer-events:auto;cursor:pointer;margin-top:8px;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--halo);color:var(--halo);font:500 11px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;background:color-mix(in srgb,var(--ink-2) 85%,transparent)}
-.quiz-open:hover,.quiz-open:focus-visible{background:var(--halo);color:var(--ink)}
+.quiz-open{all:unset;justify-self:start;pointer-events:auto;cursor:pointer;margin-top:2px;padding:2px 0;font:11px var(--f-mono);letter-spacing:.06em;color:var(--mist);border-bottom:1px dotted color-mix(in srgb,var(--mist) 60%,transparent)}
+.quiz-open:hover,.quiz-open:focus-visible{color:var(--halo);border-bottom-color:var(--halo)}
 .quiz{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:16px;background:color-mix(in srgb,var(--ink) 72%,transparent);backdrop-filter:blur(6px)}
 .quiz-card{width:min(600px,100%);max-height:calc(100% - 8px);overflow-y:auto;box-sizing:border-box;background:var(--ink-2);border:1px solid var(--line);padding:24px 26px 26px;display:grid;gap:18px;align-content:start;box-shadow:0 20px 80px rgba(0,0,0,.55)}
 .quiz-head{display:flex;align-items:baseline;gap:12px}
@@ -180,7 +180,7 @@ body{background:var(--ink);color:var(--ivory);font-family:var(--f-body);overflow
     <input id="q" type="search" placeholder="Find a concept…" autocomplete="off" aria-label="Find a concept">
     <ul class="results" id="results" hidden></ul>
   </div>
-  <button class="quiz-open" id="quizBtn" type="button">Pop quiz</button>
+  <button class="quiz-open" id="quizBtn" type="button">Take a pop quiz →</button>
 </header>
 
 <aside class="panel"><div class="panel-scroll" id="panel" aria-live="polite"></div>
