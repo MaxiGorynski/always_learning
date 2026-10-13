@@ -61,17 +61,17 @@ Bitesized definitions for the 80 concepts in `Constellation.html`, grouped by re
 - **High Availability**: Designing a system to keep running when parts of it fail. That means no single point of failure: redundant servers, replicated data, health checks and automatic failover. Availability is measured in ‘nines’: 99.9% allows almost 9 hours of downtime a year, and 99.99% allows under an hour.
 
 ## Partitioning & scale
-- **Horizontal Scaling**: More machines, not bigger ones.
-- **Database Sharding**: Split data across databases by a shard key.
-- **Hash Partitioning**: Assign keys by hash; even spread, no range scans.
-- **Range Partitioning**: Assign contiguous key ranges; fast range scans, hotspot risk.
-- **Consistent Hashing**: Keys and nodes on a ring; a membership change moves only ~1/n of keys.
-- **Hot Partition**: One partition gets a disproportionate share of traffic.
-- **Data Skew**: Uneven data distribution across keys or partitions.
-- **Resharding**: Changing shard count or boundaries while live.
-- **Rebalancing**: Moving partitions between nodes to even out load.
-- **Federation**: Split databases by function (users DB, orders DB).
-- **Data Locality**: Keep related data together, and compute near the data.
+- **Horizontal Scaling**: Handling more load by adding machines rather than buying a bigger one. A single server has a ceiling and is a single point of failure; ten servers sharing the load can keep growing and survive one dying. It’s easy for stateless app servers behind a load balancer, and much harder for databases, which need sharding or replication.
+- **Database Sharding**: Splitting one large database into smaller, independent pieces called shards, each on its own server and holding a subset of the rows. A shard key, such as user ID, decides which shard each row lives on. Sharding lets data and write traffic grow beyond one machine, but queries that span shards get harder, and choosing the key well is critical.
+- **Hash Partitioning**: Deciding which partition a record belongs to by hashing its key and using the result to pick a partition. A good hash spreads keys evenly, so no partition gets overloaded. The trade-off is that hashing scrambles key order, so a query over a range of keys, such as all of last week’s orders, has to ask every partition.
+- **Range Partitioning**: Deciding which partition a record belongs to by key range: A–F on one server, G–M on the next, and so on. Keys stay in order, so a range query like ‘all events between 9 and 10am’ hits one or two partitions. The risk is hotspots: if the keys are timestamps, every new write lands in the newest range on a single server.
+- **Consistent Hashing**: A way of assigning keys to servers so that adding or removing a server moves only a small fraction of the data. Keys and servers are both placed on a circle by their hash, and each key belongs to the next server round the circle. With naive ‘hash mod N’, changing N reshuffles nearly every key; consistent hashing moves only about 1/N of them.
+- **Hot Partition**: A partition that gets far more traffic than the others, so it becomes the bottleneck while the rest of the cluster sits idle. It usually comes from one popular key, like a celebrity’s profile, or a key pattern that concentrates writes, like timestamps. Adding servers doesn’t help, because the load is stuck on that one partition.
+- **Data Skew**: When data isn’t spread evenly across keys or partitions, so some hold far more than others. Real data is usually lopsided: a few customers, countries or products dominate. Skew causes overloaded partitions, parallel jobs where one task runs for hours while the rest finish in minutes, and query plans built on wrong assumptions.
+- **Resharding**: Changing how data is split across shards on a running system, for example going from 4 shards to 16 as data grows. Rows must move between servers while the application keeps reading and writing them, with no data lost and minimal downtime. It’s one of the riskiest operations in a sharded system, so good designs make it rare or cheap.
+- **Rebalancing**: Moving partitions between servers so each carries a fair share of data and traffic. It’s needed when servers are added or removed, or when some partitions grow faster than others. A good rebalancing scheme moves as little data as possible and keeps serving requests while the move happens.
+- **Federation**: Splitting databases by function instead of by rows: one database for users, another for orders, another for products, often each owned by a different service. Each database is smaller and can be tuned and scaled independently. The cost is that queries and transactions spanning several of them must be stitched together in application code.
+- **Data Locality**: Keeping data close to where it’s used. That means storing records that are read together in the same place (the same partition or row), and running computation on the machine that already holds the data instead of shipping it across the network. Network hops are expensive, so good locality makes queries and jobs dramatically faster.
 
 ## Traffic & resilience
 - **Load Balancing**: Spread requests across instances.
