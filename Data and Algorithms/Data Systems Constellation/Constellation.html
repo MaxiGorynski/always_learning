@@ -838,8 +838,8 @@ canvas.addEventListener('pointermove',ev=>{
 });
 function hover(mx,my){
   const n=pickNode(mx,my);
-  if(n){hoverNode=n;hoverEdge=null;hideTip();canvas.className='pointing';if(!selected)renderNode(n,true);return;}
-  if(hoverNode){hoverNode=null;if(!selected)renderHome();}
+  if(n){hoverNode=n;hoverEdge=null;hideTip();canvas.className='pointing';if(!selected&&!clusterFocus)renderNode(n,true);return;}
+  if(hoverNode){hoverNode=null;if(!selected&&!clusterFocus)renderIntro();}
   const e=pickEdge(mx,my,7);
   hoverEdge=e; canvas.className=e?'pointing':'';
   if(e) showTip(e,mx,my); else hideTip();
@@ -855,7 +855,7 @@ canvas.addEventListener('pointerup',ev=>{
   if(e){hoverEdge=e;showTip(e,mx,my);return;}
   hoverEdge=null;hideTip(); if(selected) deselect();
 });
-canvas.addEventListener('pointerleave',()=>{if(!dragging){hoverEdge=null;hoverNode=null;hideTip();if(!selected)renderHome();}});
+canvas.addEventListener('pointerleave',()=>{if(!dragging){hoverEdge=null;hoverNode=null;hideTip();if(!selected&&!clusterFocus)renderIntro();}});
 const clampD=d=>Math.max(240,Math.min(2400,d));
 function zoomBy(f){goal.dist=clampD(goal.dist*f);lastInteract=performance.now();}
 canvas.addEventListener('wheel',ev=>{ev.preventDefault();
@@ -903,10 +903,12 @@ function renderNode(n,preview){
     <p class="def">${esc(n.def)}</p>
     ${preview?'<div class="more">Click the star for an example and an analogy</div>':facets(DETAILS[n.id])}
     <div class="eyebrow">Linked to ${n.links.length}</div>
-    <ul class="links">${n.links.map(e=>{const o=e.a===n?e.b:e.a;return `<li><button data-id="${o.id}"><span class="dot" style="color:${CLUSTERS[o.cl].color}"></span><span class="nm">${esc(o.name)}</span><span class="rel">${esc(e.rel)}</span></button></li>`}).join('')}</ul>`;
+    <ul class="links">${n.links.map(e=>{const o=e.a===n?e.b:e.a;return `<li><button data-id="${o.id}"><span class="dot" style="color:${CLUSTERS[o.cl].color}"></span><span class="nm">${esc(o.name)}</span><span class="rel">${esc(e.rel)}</span></button></li>`}).join('')}</ul>
+    ${preview?'':'<section class="chat" id="chat" aria-live="polite"></section>'}`;
   const b=document.getElementById('back'); if(b) b.onclick=deselect;
   panel.querySelectorAll('.links button').forEach(btn=>btn.onclick=()=>select(byId[btn.dataset.id]));
   panel.parentElement.scrollTop=0; panel.scrollTop=0;
+  mountChat(preview?null:'n-'+n.id);
 }
 function renderIntro(){
   const counts={};nodes.forEach(n=>counts[n.cl]=(counts[n.cl]||0)+1);
@@ -917,6 +919,7 @@ function renderIntro(){
     <ul class="legend">${clusterKeys.map(k=>`<li><button data-cl="${k}" aria-pressed="${clusterFocus===k}"><span class="dot" style="color:${CLUSTERS[k].color}"></span>${CLUSTERS[k].name}<span class="ct">${counts[k]}</span></button></li>`).join('')}</ul>
     <div class="hint"><kbd>Drag</kbd> to orbit · <kbd>Scroll</kbd>, <kbd>+</kbd>/<kbd>−</kbd> or double-click to zoom<br>Click a region to fly to it · <kbd>Esc</kbd> to return</div>`;
   panel.querySelectorAll('.legend button').forEach(btn=>btn.onclick=()=>selectRegion(btn.dataset.cl));
+  mountChat(null);
 }
 function renderRegion(k){
   const C=CLUSTERS[k], R=REGIONS[k], m=nodes.filter(n=>n.cl===k).sort((a,b)=>b.links.length-a.links.length);
@@ -929,12 +932,13 @@ function renderRegion(k){
     <section class="facet why"><div class="eyebrow">Why it matters at work</div>${R.why.map(w=>`<p>${esc(w)}</p>`).join('')}</section>
     <div class="eyebrow">Concepts</div>
     <ul class="members">${m.map(n=>`<li><button data-id="${n.id}">${esc(n.name)}</button></li>`).join('')}</ul>
-    <div class="more">${inside} links inside this region · ${out} reach into others</div>`;
+    <div class="more">${inside} links inside this region · ${out} reach into others</div>
+    <section class="chat" id="chat" aria-live="polite"></section>`;
   document.getElementById('back').onclick=()=>{clusterFocus=null;deselect();};
   panel.querySelectorAll('.members button').forEach(btn=>btn.onclick=()=>select(byId[btn.dataset.id]));
   panel.parentElement.scrollTop=0; panel.scrollTop=0;
+  mountChat('r-'+k);
 }
-renderIntro();
 
 /* ---------- search ---------- */
 const q=document.getElementById('q'),res=document.getElementById('results');let active=0,matches=[];
@@ -1090,4 +1094,6 @@ composer.addEventListener('submit',ev=>{ev.preventDefault();if(chatKey)ask(chatK
 askBox.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();composer.requestSubmit();}});
 askBox.addEventListener('input',()=>{askBox.style.height='auto';askBox.style.height=Math.min(140,askBox.scrollHeight)+'px';});
 stopBtn.onclick=()=>{if(chatKey&&pending[chatKey])pending[chatKey].ctl.abort();};
+
+renderIntro();
 </script>
