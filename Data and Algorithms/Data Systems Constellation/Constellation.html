@@ -924,4 +924,25 @@ q.addEventListener('keydown',ev=>{
   else if(ev.key==='Escape'){q.value='';res.hidden=true;}
 });
 q.addEventListener('blur',()=>setTimeout(()=>res.hidden=true,150));
+
+/* ---------- storage: private per-viewer docs, browser fallback ---------- */
+// Cloud mode keeps docs under data/users/<id>/ (private to the viewer); otherwise localStorage.
+const store={mode:'local',db:null,uid:null,chain:{},
+  ready:(async()=>{try{
+    const c=window.claude; if(!c||!c.use) return;
+    const [db,user]=await Promise.all([c.use('db'),c.use('user')]);
+    const uid=user?await user.id():null;
+    if(db&&uid){store.db=db;store.uid=uid;store.mode='cloud';}
+  }catch(e){}})(),
+  ref(k){return this.db.collection('data/users/'+this.uid).doc(k);},
+  local(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem('dsc:'+k)||'null');localStorage.setItem('dsc:'+k,JSON.stringify(v));}catch(e){return null;}},
+  async get(k){await this.ready;
+    if(this.mode==='cloud'){try{const s=await this.ref(k).get();return s.exists?JSON.parse(JSON.stringify(s.data())):null;}catch(e){}}
+    return this.local(k);},
+  set(k,v){const body=JSON.parse(JSON.stringify(v));
+    const run=async()=>{await this.ready;
+      if(this.mode==='cloud'){try{await this.ref(k).set(body);return;}catch(e){}}
+      this.local(k,body);};
+    return this.chain[k]=(this.chain[k]||Promise.resolve()).then(run,run);}  // one write at a time per doc
+};
 </script>
