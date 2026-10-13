@@ -140,6 +140,17 @@ body{background:var(--ink);color:var(--ivory);font-family:var(--f-body);overflow
 .verdict b{font:500 11px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--good)}
 .verdict.miss b{color:var(--bad)}
 .verdict p{margin:0;font-size:13.5px;line-height:1.55;color:var(--ivory)}
+.defbox{width:100%;box-sizing:border-box;min-height:120px;resize:vertical;background:var(--ink);border:1px solid var(--line);color:var(--ivory);font:14px/1.6 var(--f-body);padding:12px 14px;outline:none;border-radius:0}
+.defbox:focus-visible{border-color:var(--halo)}
+.defbox:disabled{opacity:.75}
+.defhint{margin:-8px 0 0;font-size:12.5px;line-height:1.5;color:var(--mist)}
+.marking{margin:0;font:12px var(--f-mono);color:var(--mist);letter-spacing:.04em}
+.marking::after{content:"";display:inline-block;width:1.2em;text-align:left;animation:dots 1.2s steps(4) infinite}
+@keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+@media (prefers-reduced-motion:reduce){.marking::after{animation:none;content:"…"}}
+.verdict.partly{border-left-color:var(--halo)}
+.verdict.partly b{color:var(--halo)}
+.verdict .ref{color:var(--mist);font-size:12.5px}
 .qactions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .ghost{all:unset;cursor:pointer;font:500 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mist);padding:8px 0}
 .ghost:hover,.ghost:focus-visible{color:var(--halo)}
