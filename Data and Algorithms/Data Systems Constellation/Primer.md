@@ -31,18 +31,18 @@ Bitesized definitions for the 80 concepts in `Constellation.html`, grouped by re
 - **Lock Escalation**: When a database decides it is tracking too many small locks and replaces them with one big lock. Locking 10,000 individual rows uses a lot of memory, so the database (notably SQL Server) may lock the whole table instead. That saves memory but blocks everyone else who wanted any row in the table, causing surprise slowdowns and deadlocks.
 
 ## Consensus & coordination
-- **Distributed Transactions**: One atomic transaction across several nodes or services.
-- **Two-Phase Commit (2PC)**: Coordinator says prepare, then commit. Blocks if the coordinator dies mid-way.
-- **Three-Phase Commit (3PC)**: Adds a pre-commit phase to avoid blocking; unsafe under network partitions.
-- **Saga Pattern**: A chain of local transactions, each with a compensating undo.
-- **Two Generals Problem**: Proof that agreement over an unreliable channel can never be certain.
-- **Raft**: Consensus via an elected leader replicating a log to a majority.
-- **Leader Election**: Nodes agree on exactly one coordinator.
-- **Quorum**: Require W + R > N acknowledgements so reads overlap the latest write.
-- **Split-Brain**: Two nodes both believe they're leader; data diverges.
-- **Distributed Locking**: Mutual exclusion across machines; needs leases and fencing tokens.
-- **Idempotency**: Doing it twice has the same effect as once. Makes retries safe.
-- **Exactly-Once Semantics**: Each message takes effect once; really at-least-once delivery plus deduplication.
+- **Distributed Transactions**: A transaction that must change data in more than one database or service and still be all-or-nothing. On a single database this is easy. Across machines, any of them, or the network between them, can fail midway, leaving one side committed and the other not. Protocols like two-phase commit and patterns like sagas exist to handle this.
+- **Two-Phase Commit (2PC)**: The classic protocol for committing one transaction across several machines. A coordinator first asks every participant ‘can you commit?’, and each prepares and votes. Only if all vote yes does the coordinator tell them to commit. It guarantees all-or-nothing, but if the coordinator crashes after the vote, participants are stuck holding locks until it comes back.
+- **Three-Phase Commit (3PC)**: An attempt to fix two-phase commit’s main flaw: getting stuck when the coordinator crashes. It adds an extra round so participants know enough to finish on their own after a timeout. In theory that removes the blocking. In practice it relies on network delays being predictable, which real networks don’t guarantee, so it is rarely used.
+- **Saga Pattern**: A way to run a multi-step business transaction across services without locking everything at once. Each step is a normal local transaction that commits immediately. If a later step fails, the saga runs compensating steps that undo the earlier ones, like a refund that reverses a charge. You give up instant all-or-nothing, but every service stays independent and available.
+- **Two Generals Problem**: A classic thought experiment proving that two parties talking over an unreliable network can never be 100% sure they agree. Any message might be lost, so every confirmation needs its own confirmation, forever. It’s why distributed systems rely on timeouts, retries and idempotency instead of perfect certainty.
+- **Raft**: A consensus algorithm: a way for a group of servers to agree on the same sequence of changes even when some of them crash. The servers elect one leader, the leader sends every change to the others, and a change counts as committed once a majority have stored it. It was designed to be easier to understand than Paxos, and runs inside etcd, Consul and CockroachDB.
+- **Leader Election**: How a group of servers picks exactly one of them to be in charge. Many systems are far simpler when a single node, the leader, makes decisions. The hard part is guaranteeing there’s never more than one leader at a time, even when the network is flaky, and choosing a new one quickly when the current leader dies.
+- **Quorum**: The minimum number of servers that must take part in an operation for it to count. If data lives on 3 servers, and writes must reach 2 and reads must ask 2, every read overlaps the latest write on at least one server. Quorums let a system keep working while a minority of servers is down, without returning stale data.
+- **Split-Brain**: When a network failure splits a cluster in two and each half believes it’s in charge. Both sides accept writes, so the data diverges and the conflicts can’t be cleanly merged later. It’s one of the most damaging failures in distributed databases, and is prevented by requiring a majority vote (a quorum) before any node can act as leader.
+- **Distributed Locking**: A lock shared by processes on different machines, so only one of them does something at a time, such as running a scheduled job. It’s much harder than a local lock: the holder can crash, pause, or lose its network connection while still believing it holds the lock. Safe versions use expiring leases and fencing tokens that reject writes from a stale holder.
+- **Idempotency**: An operation is idempotent if doing it twice has the same effect as doing it once. Setting a value to 5 is idempotent; adding 5 isn’t. Networks force you to retry requests when you can’t tell whether they succeeded, and idempotency is what makes those retries safe, for example so a payment isn’t charged twice.
+- **Exactly-Once Semantics**: The guarantee that each message is processed exactly once, never lost and never duplicated. Networks can’t actually deliver that: you either risk losing messages or risk sending some twice. So exactly-once systems deliver at least once and then discard duplicates, or make processing idempotent, so the effect is as if each message arrived once.
 
 ## Replication & consistency
 - **CAP Theorem**: During a network partition, choose consistency or availability.
