@@ -1282,7 +1282,15 @@ store.get('quiz').then(v=>{
 const scopeName=k=>k==='all'?'Whole network':CLUSTERS[k].name;
 const pct=(r,t)=>t?Math.round(100*r/t):0;
 const num=v=>String(Math.round(v*10)/10);  // half points from partly-right answers
-function quizRecord(n){const s=quizData.stats[n.id];return s?`<div class="more">Quiz record: ${num(s[0])} of ${num(s[0]+s[1])} correct</div>`:'';}
+const VERDICT_WORD={correct:'correct',partly:'partly right',incorrect:'not quite'};
+function quizRecord(n){
+  const s=quizData.stats[n.id], d=quizData.defs&&quizData.defs[n.id], last=d&&d[d.length-1];
+  if(!s&&!last) return '';
+  const parts=[];
+  if(s) parts.push(`Quiz record: ${num(s[0])} of ${num(s[0]+s[1])} correct`);
+  if(last) parts.push(`your last definition (${dayFmt.format(last.at)}) was ${VERDICT_WORD[last.verdict]||'marked'}`);
+  return `<div class="more">${parts.join(' · ')}</div>`;
+}
 const quizHead=t=>`<div class="quiz-head"><h2 id="quizTitle">${esc(t)}</h2><button class="x" data-act="close">Close</button></div>`;
 function progressHtml(){
   if(!quizLoaded) return '<p class="intro">Loading your progress…</p>';
@@ -1309,6 +1317,7 @@ function renderQuizHome(){
     <div class="chips">${['all',...clusterKeys].map(k=>`<button data-scope="${k}" aria-pressed="${qScope===k}">${k==='all'?'':`<span class="dot" style="color:${CLUSTERS[k].color}"></span>`}${esc(scopeName(k))}</button>`).join('')}</div>
     <div class="eyebrow">Length</div>
     <div class="chips">${[5,10,20].map(n=>`<button data-len="${n}" aria-pressed="${qLen===n}">${n} questions</button>`).join('')}</div>
+    ${sample?'<p class="defhint" style="margin:0">Now and then a question asks you to define a concept in your own words, and Claude marks your answer.</p>':''}
     <button class="go" data-act="start">Start quiz</button>
     ${progressHtml()}`;
 }
@@ -1370,7 +1379,7 @@ async function gradeDefinition(){
   const q=run&&run.qs[run.i]; if(!q||q.options||run.picked!==null||run.grading) return;
   const box=document.getElementById('defBox'),after=document.getElementById('qAfter'),acts=document.getElementById('defActions');
   const text=box.value.trim();
-  if(text.split(/\s+/).filter(Boolean).length<4){after.innerHTML='<p class="marking" style="animation:none">Write at least a sentence so Claude has something to mark.</p>';box.focus();return;}
+  if(text.split(/\s+/).filter(Boolean).length<4){after.innerHTML='<p class="intro">Write at least a sentence so Claude has something to mark.</p>';box.focus();return;}
   if(!sample){after.innerHTML='<p class="intro">Claude isn’t available to mark answers in this view.</p>';return;}
   run.grading=true; box.disabled=true; acts.hidden=true;
   after.innerHTML='<p class="marking">Claude is marking your answer</p>';
