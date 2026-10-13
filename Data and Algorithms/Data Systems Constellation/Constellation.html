@@ -1223,5 +1223,129 @@ function pickConcepts(pool,count,stats){
   return out;
 }
 
+/* ---------- quiz: flow, scoring and progress ---------- */
+// Stored as one private doc: stats = {conceptId: [right, wrong]}, attempts = [{at, scope, score, total}]
+const quizEl=document.getElementById('quiz'),quizCard=document.getElementById('quizCard'),quizBtn=document.getElementById('quizBtn');
+let quizData={stats:{},attempts:[]},quizLoaded=false,run=null,qScope='all',qLen=10;
+store.get('quiz').then(v=>{
+  if(v) quizData={stats:(v.stats&&typeof v.stats==='object')?v.stats:{},attempts:Array.isArray(v.attempts)?v.attempts:[]};
+  quizLoaded=true; if(!quizEl.hidden&&!run) renderQuizHome();
+});
+const scopeName=k=>k==='all'?'Whole network':CLUSTERS[k].name;
+const pct=(r,t)=>t?Math.round(100*r/t):0;
+function quizRecord(n){const s=quizData.stats[n.id];return s?`<div class="more">Quiz record: ${s[0]} of ${s[0]+s[1]} correct</div>`:'';}
+const quizHead=t=>`<div class="quiz-head"><h2 id="quizTitle">${esc(t)}</h2><button class="x" data-act="close">Close</button></div>`;
+function progressHtml(){
+  if(!quizLoaded) return '<p class="intro">Loading your progress…</p>';
+  const A=quizData.attempts,S=quizData.stats;
+  if(!A.length&&!Object.keys(S).length) return `<div class="eyebrow">Your progress</div><p class="intro">No quizzes yet. Your scores, accuracy by region and the concepts worth revisiting will build up here as you play.</p>`;
+  let right=0,total=0; Object.values(S).forEach(([r,w])=>{right+=r;total+=r+w;});
+  const mastery=clusterKeys.map(k=>{
+    const m=nodes.filter(n=>n.cl===k);let r=0,t=0,seen=0;
+    m.forEach(n=>{const s=S[n.id];if(s){r+=s[0];t+=s[0]+s[1];seen++;}});
+    return `<li><span>${esc(CLUSTERS[k].name)} <span style="color:var(--mist)">· ${seen}/${m.length} seen</span></span><span class="track"><i style="width:${pct(r,t)}%;background:${CLUSTERS[k].color}"></i></span><span class="pc">${t?pct(r,t)+'%':'—'}</span></li>`;}).join('');
+  const recent=A.slice(-20);
+  const weak=nodes.filter(n=>S[n.id]&&S[n.id][1]>0).map(n=>({n,r:S[n.id][0],t:S[n.id][0]+S[n.id][1]}))
+    .sort((a,b)=>a.r/a.t-b.r/b.t||b.t-a.t).slice(0,5);
+  return `<div class="eyebrow">Your progress</div>
+    <div class="stats"><div><b>${A.length}</b><span>Quizzes</span></div><div><b>${total}</b><span>Answers</span></div><div><b>${pct(right,total)}%</b><span>Accuracy</span></div></div>
+    <div class="eyebrow">Accuracy by region</div><ul class="mastery">${mastery}</ul>
+    ${recent.length?`<div class="eyebrow">Last ${recent.length} quiz${recent.length>1?'zes':''} · score %</div><div class="history">${recent.map(a=>`<i style="height:${Math.max(4,pct(a.score,a.total))}%" title="${dayFmt.format(a.at)} · ${esc(scopeName(a.scope))} · ${a.score}/${a.total}"></i>`).join('')}</div>`:''}
+    ${weak.length?`<div class="eyebrow">Concepts to revisit</div><ul class="weak">${weak.map(x=>`<li><button data-open="${x.n.id}">${esc(x.n.name)}<span>${x.r}/${x.t} right</span></button></li>`).join('')}</ul>`:''}`;
+}
+function renderQuizHome(){
+  run=null;
+  quizCard.innerHTML=quizHead('Pop quiz')+`
+    <div class="eyebrow">Questions from</div>
+    <div class="chips">${['all',...clusterKeys].map(k=>`<button data-scope="${k}" aria-pressed="${qScope===k}">${k==='all'?'':`<span class="dot" style="color:${CLUSTERS[k].color}"></span>`}${esc(scopeName(k))}</button>`).join('')}</div>
+    <div class="eyebrow">Length</div>
+    <div class="chips">${[5,10,20].map(n=>`<button data-len="${n}" aria-pressed="${qLen===n}">${n} questions</button>`).join('')}</div>
+    <button class="go" data-act="start">Start quiz</button>
+    ${progressHtml()}`;
+}
+function openQuiz(){
+  qScope=clusterFocus||(selected&&selected.cl)||qScope;
+  quizEl.hidden=false; renderQuizHome(); quizCard.querySelector('[data-act="start"]').focus();
+}
+function closeQuiz(){
+  if(run&&!run.done) finishRun();
+  quizEl.hidden=true; run=null; quizBtn.focus();
+  if(selected) renderNode(selected,false);  // refresh the card's quiz record
+}
+function startRun(){
+  const pool=qScope==='all'?nodes:nodes.filter(n=>n.cl===qScope);
+  run={scope:qScope,qs:pickConcepts(pool,qLen,quizData.stats).map(n=>makeQuestion(n,pool)),i:0,score:0,answered:0,missed:[],picked:null,done:false};
+  renderQuestion();
+}
+function renderQuestion(){
+  const q=run.qs[run.i];
+  quizCard.innerHTML=quizHead(scopeName(run.scope))+`
+    <div class="qmeta"><span>Question ${run.i+1} of ${run.qs.length}</span><span id="qScore">Score ${run.score}</span></div>
+    <div class="qbar"><i style="width:${100*run.i/run.qs.length}%"></i></div>
+    <div class="qkind">${q.kind}</div>
+    <p class="qtext ${q.cls}">${q.html}</p>
+    <ul class="opts">${q.options.map((o,i)=>`<li><button data-opt="${i}"><span class="k">${i+1}</span>${esc(o.name)}</button></li>`).join('')}</ul>
+    <div id="qAfter"></div>`;
+  quizCard.querySelector('.opts button').focus();
+}
+function answer(i){
+  const q=run.qs[run.i]; if(run.picked!==null) return;
+  run.picked=i; run.answered++;
+  const ok=q.options[i]===q.answer, st=(quizData.stats[q.answer.id]||[0,0]).slice();
+  st[ok?0:1]++; quizData.stats[q.answer.id]=st;
+  if(ok) run.score++; else run.missed.push(q.answer);
+  store.set('quiz',quizData);
+  quizCard.querySelectorAll('.opts button').forEach((b,j)=>{b.disabled=true;if(q.options[j]===q.answer)b.classList.add('right');else if(j===i)b.classList.add('wrong');});
+  document.getElementById('qScore').textContent='Score '+run.score;
+  const last=run.i===run.qs.length-1;
+  document.getElementById('qAfter').innerHTML=`<div class="verdict ${ok?'':'miss'}"><b>${ok?'Correct':'Not quite · it’s '+esc(q.answer.name)}</b><p>${esc(q.answer.def)}</p></div>
+    <div class="qactions"><button class="go" data-act="next">${last?'See results':'Next question'}</button><button class="ghost" data-open="${q.answer.id}">Open card</button></div>`;
+  quizCard.querySelector('[data-act="next"]').focus();
+}
+function finishRun(){
+  if(!run||run.done) return null;
+  run.done=true; if(!run.answered) return null;
+  const prev=quizData.attempts.filter(a=>a.scope===run.scope).map(a=>pct(a.score,a.total));
+  quizData.attempts.push({at:Date.now(),scope:run.scope,score:run.score,total:run.answered});
+  if(quizData.attempts.length>300) quizData.attempts.splice(0,quizData.attempts.length-300);
+  store.set('quiz',quizData);
+  return prev.length?Math.max(...prev):null;
+}
+function renderResults(best){
+  const p=pct(run.score,run.answered), name=scopeName(run.scope);
+  const msg=p===100?'Perfect score.':p>=80?'Strong work.':p>=50?'Solid progress. Revisit the ones you missed.':'Keep going. The cards below are worth another read.';
+  const vs=best===null?`Your first quiz on ${name}.`:p>best?`A new best on ${name}, up from ${best}%.`:`Your best on ${name} is ${best}%.`;
+  const missed=[...new Set(run.missed)];
+  quizCard.innerHTML=quizHead('Results')+`
+    <div class="big">${run.score}/${run.answered}</div>
+    <p class="intro">${msg} ${esc(vs)}</p>
+    ${missed.length?`<div class="eyebrow">Missed this round</div><ul class="weak">${missed.map(n=>`<li><button data-open="${n.id}">${esc(n.name)}<span>Open card</span></button></li>`).join('')}</ul>`:''}
+    <div class="qactions"><button class="go" data-act="again">Another round</button><button class="ghost" data-act="home">See progress</button></div>`;
+  quizCard.querySelector('[data-act="again"]').focus();
+}
+function nextQuestion(){
+  run.i++; run.picked=null;
+  if(run.i<run.qs.length) return renderQuestion();
+  renderResults(finishRun());
+}
+quizCard.addEventListener('click',ev=>{
+  const b=ev.target.closest('button'); if(!b) return;
+  const act=b.dataset.act;
+  if(act==='close') return closeQuiz();
+  if(b.dataset.scope){qScope=b.dataset.scope;quizCard.querySelectorAll('[data-scope]').forEach(x=>x.setAttribute('aria-pressed',x===b));return;}
+  if(b.dataset.len){qLen=+b.dataset.len;quizCard.querySelectorAll('[data-len]').forEach(x=>x.setAttribute('aria-pressed',x===b));return;}
+  if(act==='start'||act==='again') return startRun();
+  if(b.dataset.opt!==undefined) return answer(+b.dataset.opt);
+  if(act==='next') return nextQuestion();
+  if(act==='home') return renderQuizHome();
+  if(b.dataset.open){const n=byId[b.dataset.open];closeQuiz();select(n);}
+});
+quizEl.addEventListener('click',ev=>{if(ev.target===quizEl)closeQuiz();});
+quizEl.addEventListener('keydown',ev=>{
+  if(ev.key==='Escape'){ev.preventDefault();closeQuiz();return;}
+  const d=+ev.key; if(run&&run.picked===null&&d>=1&&d<=4&&run.qs[run.i].options[d-1]) answer(d-1);
+});
+quizBtn.onclick=openQuiz;
+
 renderIntro();
 </script>
